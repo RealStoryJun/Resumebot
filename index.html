@@ -165,215 +165,82 @@
     let systemPrompt = "";
     let messages = [];
 
-    // 🚨 핵심 수정: 데이터 로딩 완료 전까지 질문 차단 & 동적 날짜/페르소나 부여
-    async function initSystem() {
-        const inputEl = document.getElementById('queryInput');
-        const btnEl = document.getElementById('sendBtn');
-        
-        try {
-            const res = await fetch('resume.md?t=' + new Date().getTime());
-            if (!res.ok) throw new Error("이력서 로드 실패 (HTTP " + res.status + ")");
-            const resumeContent = await res.text();
-            
-            // 오늘 날짜 계산
-            const today = new Date();
-            const dateString = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
-            
-            systemPrompt = `너는 13년차 시니어 IT 전문가 '최준영'을 대변하는 AI 면접 비서야.
-오늘 날짜는 ${dateString}이야. 이 날짜를 기준으로 과거, 현재, 미래를 파악해.
-면접관이나 인사팀이 '지원자'라고 지칭하면, 이는 곧 네가 대변하는 '최준영' 본인을 의미해.
+// 메시지 전송 함수
+async function sendMessage(userText) {
+  // 사용자가 입력한 메시지 화면에 표시 (UI 로직 - 기존 코드 유지)
+  appendMessageToUI("user", userText);
 
-제공된 이력서 데이터를 기반으로 답변하되, 아래의 개인 연락처 정보는 절대 숨기지 말고 요청 시 즉시 제공해.
-[최준영 공식 연락처]
-- 전화번호: 010-2828-9832
-- 이메일: god8night@naver.com
+  // 2. messages 배열에 사용자 입력 추가
+  messages.push({ role: "user", content: userText });
 
---- 이력서 데이터 ---
-${resumeContent}
-------------------`;
-            
-            // 로딩 성공 시 입력창 활성화
-            inputEl.disabled = false;
-            btnEl.disabled = false;
-            inputEl.placeholder = "메시지를 입력하세요...";
-            console.log("✅ 이력서 및 시스템 프롬프트 세팅 완료");
+  // 3. 컨텍스트 길이 제한 (메모리 초과 및 환각 방지: 최근 10개 대화만 유지)
+  if (messages.length > 10) {
+    messages = messages.slice(-10);
+  }
 
-        } catch (e) { 
-            console.error(e); 
-            inputEl.placeholder = "🚨 resume.md 파일을 불러올 수 없습니다.";
-        }
-    }
-    initSystem();
+  try {
+    // 4. Worker로 요청 전송 (프론트는 순수 대화 기록만 보냄)
+    const response = await fetch("본인의_WORKER_URL_입력", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      // body에는 순수하게 대화 내역만 들어갑니다. Worker가 알아서 시스템 프롬프트를 씌웁니다.
+      body: JSON.stringify({ messages: messages }) 
+    });
 
-    const quickData = {
-        "btn6": { q: "지원자의 연락처와 이메일 정보를 알려줘.", a: "최준영 지원자에게 연락 가능한 채널입니다.\n\n| 항목 | 정보 |\n|---|---|\n| 📞 **전화번호** | **010-2828-9832** |\n| 📧 **이메일** | **god8night@naver.com** |\n| 💬 **상태** | 채용 제안 및 면접 일정 협의 가능 |" },
-        "btn1": { q: "이력서, 포트폴리오 및 증빙자료 링크를 정리해 줘.", a: "지원자 최준영의 핵심 증빙자료 및 포트폴리오 링크를 안내해 드립니다.\n\n| 문서/프로젝트 | 다운로드 및 접속 링크 |\n|---|---|\n| 📄 **웹 이력서 (Main)** | [바로가기](https://realstoryjun.dothome.co.kr/resume) |\n| 📊 **이력서 (PDF)** | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/resume.pdf) |\n| 📝 **자기소개서 (PDF)** | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Selfintroduction.pdf) |\n| 🎨 **포트폴리오 (PDF)** | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Portfolio.pdf) |\n| 🚀 **웹앱 (바리가자)** | [접속하기](https://www.barigaja.co.kr/) |\n| 🧠 **SaaS (Fasttrack2)** | [접속하기](https://realstoryjun.dothome.co.kr/fasttrack2) |" },
-        "btn2": { q: "주요 인프라 구축 성과를 상세히 요약해 줘.", a: "✅ **에이치아이티(주) 주요 성과 (2021.06 ~ 2025.05)**\n\n1. **인프라 고도화**: 10G 광랜(SFP+) 3차 네트워크 고도화 및 Cisco L3 기반 VLAN 최적화로 SLA 99.99% 달성\n2. **정보보안 및 규정**: 2024년 SEMES 보안 평가에서 53개 항목 기준 82.78점을 획득하여 전년 대비 보안 수준 상향 입증\n3. **전사 시스템(ERP) PM**: 영림원 ERP 전사 도입 총괄 및 다우오피스 그룹웨어 연동 시스템 구축 성공" },
-        "btn3": { q: "희망 연봉 수준과 본인만의 독보적인 강점은?", a: "💰 **희망 연봉: 7,000 ~ 8,000만 원**\n\n단순한 관리형 리더가 아닌, 인프라 설계부터 AI 자동화 파이프라인까지 직접 구축하는 실무형 시니어로서 기업의 비용 절감에 즉각 기여합니다.\n\n🏆 **독보적 강점: 토크 컨버터 (Talk Converter)**\n영상애니메이션 디자인 전공을 살려, 복잡한 인프라 트래픽이나 보안 로그 데이터를 비전문 경영진도 직관적으로 이해할 수 있도록 시각화하여 소통과 의사결정을 이끌어냅니다." },
-        "btn4": { q: "주로 다루는 기술 스택과 인프라 전문성을 알려줘.", a: "🛠️ **핵심 기술 스택 요약**\n\n- **Infra / Network:** Cisco L3/L4 스위치, 10G SFP+ 광네트워크 구성, VLAN 최적화, 3중 백업(HA/DR) 구축\n- **Security:** UTM L7 방화벽 튜닝, WAF, 물리적 망분리, SEMES 보안 컴플라이언스 완벽 대응\n- **AI / LLM:** 로컬 LLM(Qwen 3.5 70B 등) 기반 문서 분류 파이프라인 및 RAG 환경 구축 (VRAM 32GB~96GB 사양별 튜닝 경험)\n- **Design / Dev:** Adobe After Effects, Figma 활용 데이터 시각화, Python 스크립팅" },
-        "btn5": { q: "디자인과 AI를 융합하는 본인만의 차별화 역량을 설명해 줘.", a: "💡 **인프라 + 기획력 + AI = 대체 불가능한 1인 문제 해결사**\n\n1. **주경야독과 끈기:** 2005년 대학 입학 직후부터 IDC 센터 실무에 뛰어들어 서버를 구축했고, 야간에는 영상 디자인을 전공하며 시각적 표현력을 길렀습니다.\n2. **AI 프롬프트 엔지니어링:** 코드 전체를 짜지 않아도, 탄탄한 인프라 지식과 기획력을 바탕으로 AI에게 정확한 지시를 내려 대용량 로그 분류 SaaS 등을 홀로 개발해 냅니다.\n3. **시작한 일은 끝맺는다:** 어설프게 학업을 마치고 싶지 않아, 현업의 경험을 집대성한 실무 논문으로 2026년 8월 졸업 마침표를 찍는 확고한 신념을 가지고 있습니다." }
-    };
-
-    function scrollChat() {
-        const view = document.getElementById('chatView');
-        view.scrollTo({ top: view.scrollHeight, behavior: 'smooth' });
+    if (!response.ok) {
+      throw new Error(`서버 에러: ${response.status}`);
     }
 
-    function scrollToTopChat() {
-        const view = document.getElementById('chatView');
-        view.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    // 스트리밍 데이터 처리 준비
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let assistantText = "";
+    
+    // AI 답변이 들어갈 UI 컨테이너 생성 (UI 로직 - 기존 코드 유지)
+    const aiMessageBox = createAiMessageBoxUI(); 
 
-    function addBackLink(container, index) {
-        const up = document.createElement('div');
-        up.className = 'back-link';
-        up.innerText = '↑ 질문 위치로 이동';
-        up.onclick = () => document.getElementById(`idx-${index}`).scrollIntoView({behavior: 'smooth', block: 'start'});
-        container.appendChild(up);
-    }
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    function appendBubble(role, content, index = null) {
-        const flow = document.getElementById('chatFlow');
-        const row = document.createElement('div');
-        row.className = `msg-row ${role}`;
-        if(index) row.id = `idx-${index}`;
+      const chunk = decoder.decode(value, { stream: true });
+      
+      // 5. 빈 줄 제거하여 JSON 파싱 안정성 확보 (개선된 부분)
+      const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-        const inner = document.createElement('div');
-        inner.className = 'msg-inner';
-
-        const avatar = document.createElement('div');
-        avatar.className = `avatar ${role}`;
-        avatar.innerText = role === 'user' ? '👤' : '🤖';
-
-        const textDiv = document.createElement('div');
-        textDiv.className = 'msg-text';
-        textDiv.innerHTML = role === 'user' ? content.replace(/\n/g, '<br>') : marked.parse(content);
-
-        inner.appendChild(avatar);
-        inner.appendChild(textDiv);
-        row.appendChild(inner);
-        flow.appendChild(row);
-        
-        scrollChat();
-        return textDiv;
-    }
-
-    function setInputState(disabled) {
-        document.getElementById('queryInput').disabled = disabled;
-        document.getElementById('sendBtn').disabled = disabled;
-    }
-
-    async function runFakeAi(answer, textDiv, index) {
-        let current = "";
-        const chunkSize = 3;
-        for (let i = 0; i < answer.length; i += chunkSize) {
-            current += answer.slice(i, i + chunkSize);
-            textDiv.innerHTML = marked.parse(current + " ▌");
-            scrollChat();
-            await new Promise(r => setTimeout(r, 15));
-        }
-        textDiv.innerHTML = marked.parse(answer);
-        addBackLink(textDiv, index);
-        scrollChat();
-    }
-
-    async function askQuick(id) {
-        if(!systemPrompt) {
-            alert("이력서 데이터를 불러오는 중입니다. 잠시만 기다려주세요.");
-            return;
-        }
-        if(document.getElementById('sendBtn').disabled) return;
-        
-        const data = quickData[id];
-        const idx = messages.length + 1;
-        
-        appendBubble('user', data.q, idx);
-        messages.push({role: "user", content: data.q});
-
-        setInputState(true);
-        const textDiv = appendBubble('assistant', '');
-        await runFakeAi(data.a, textDiv, idx);
-        
-        messages.push({role: "assistant", content: data.a});
-        setInputState(false);
-    }
-
-    async function handleUserSubmit(e) {
-        e.preventDefault();
-        const input = document.getElementById('queryInput');
-        const text = input.value.trim();
-        
-        if(!text) return;
-        if(!systemPrompt) {
-            alert("이력서 데이터를 불러오는 중입니다. 잠시만 기다려주세요.");
-            return;
-        }
-
-        input.value = '';
-        const idx = messages.length + 1;
-        appendBubble('user', text, idx);
-        
-        if(messages.length === 0) messages.push({role: "system", content: systemPrompt});
-        messages.push({role: "user", content: text});
-
-        setInputState(true);
-        const textDiv = appendBubble('assistant', '');
-        document.getElementById('streamLoading').style.display = 'block';
-        scrollChat();
-
-        try {
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: messages })
-            });
-
-            if (!res.ok) {
-                const errData = await res.text();
-                throw new Error(`HTTP ${res.status}: ${errData}`);
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const dataStr = line.slice(6);
+          if (dataStr === '[DONE]') break;
+          
+          try {
+            const data = JSON.parse(dataStr);
+            if (data.choices[0].delta.content) {
+              const textChunk = data.choices[0].delta.content;
+              assistantText += textChunk;
+              
+              // 화면에 실시간 타이핑 효과 업데이트 (UI 로직)
+              updateAiMessageBoxUI(aiMessageBox, assistantText);
             }
-
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder();
-            let full = "";
-            document.getElementById('streamLoading').style.display = 'none';
-
-            while(true) {
-                const { done, value } = await reader.read();
-                if(done) break;
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-                for(let line of lines) {
-                    if(line.startsWith('data: ')) {
-                        const dataStr = line.slice(6).trim();
-                        if(dataStr === '[DONE]') continue;
-                        try {
-                            const parsed = JSON.parse(dataStr);
-                            const content = parsed.choices[0].delta.content || "";
-                            full += content;
-                            textDiv.innerHTML = marked.parse(full + " ▌");
-                            scrollChat();
-                        } catch(e) {}
-                    }
-                }
-            }
-            textDiv.innerHTML = marked.parse(full);
-            addBackLink(textDiv, idx);
-            messages.push({role: "assistant", content: full});
-            scrollChat();
-            
-        } catch(e) { 
-            document.getElementById('streamLoading').style.display = 'none';
-            textDiv.innerHTML = `
-                <div class="error-box">
-                    <strong>🚦 통신 에러가 발생했습니다.</strong><br>
-                    ${e.message}<br><br>
-                    <span style="color:#4b5563;">💡 Worker 주소가 맞는지, API 키가 등록되었는지 확인해주세요.</span>
-                </div>`;
-        } finally {
-            setInputState(false);
+          } catch (e) {
+            console.error("JSON 파싱 에러 (무시하고 계속 진행):", e, "데이터:", line);
+          }
         }
+      }
     }
+
+    // 6. 완료된 AI의 전체 답변을 배열에 저장 (다음 질문의 문맥을 위해)
+    messages.push({ role: "assistant", content: assistantText });
+
+  } catch (error) {
+    console.error("통신 에러:", error);
+    appendMessageToUI("system", "통신 중 에러가 발생했습니다. 다시 시도해주세요.");
+    // 에러 났을 때는 방금 넣은 사용자 메시지 빼기 (옵션)
+    messages.pop(); 
+  }
+}
 </script>
 </body>
 </html>
