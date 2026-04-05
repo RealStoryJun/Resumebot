@@ -37,7 +37,7 @@ st.markdown("""
 # ==========================================
 @st.cache_data
 def load_resume_data():
-    file_path = "resume.md"
+    file_path = "Resume.md"
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
