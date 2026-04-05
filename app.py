@@ -1,55 +1,110 @@
 import streamlit as st
 from groq import Groq
+import os
 
-# 1. Groq 클라이언트 초기화
-# (실제 배포 시에는 st.secrets에 키를 숨겨서 안전하게 관리합니다)
+# ==========================================
+# 1. 페이지 기본 설정 & 디자인 커스텀 (CSS)
+# ==========================================
+st.set_page_config(page_title="최준영 AI 비서", page_icon="👨‍💻", layout="centered")
+
+# 스트림릿 기본 메뉴 숨기기 및 세련된 폰트/버튼 스타일 적용
+st.markdown("""
+<style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* 버튼 스타일 디자인 */
+    div.stButton > button:first-child {
+        background-color: #f0f2f6;
+        color: #0f1116;
+        border: 1px solid #dcdcdc;
+        border-radius: 20px;
+        font-size: 14px;
+        padding: 5px 15px;
+        transition: all 0.3s ease;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #4b8bfc;
+        color: white;
+        border-color: #4b8bfc;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================
+# 2. 데이터 로드 및 초기화
+# ==========================================
+@st.cache_data
+def load_resume_data():
+    file_path = "resume.md"
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    else:
+        return "이력서 데이터를 불러올 수 없습니다."
+
+resume_text = load_resume_data()
+
+# API 클라이언트 (Secrets 사용)
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# 2. 내 이력서 컨텍스트 (시스템 프롬프트에 주입)
-RESUME_CONTEXT = """
-너는 IT 인프라/보안 직무에 지원하는 최준영의 AI 면접 비서야.
-아래 정보를 바탕으로 채용 담당자의 질문에 전문적이고 친절하게 답변해줘.
-모르는 내용은 지어내지 말고, 실제 면접에서 확인해달라고 유도해.
+# ==========================================
+# 3. 화면 헤더 및 예상 질문 (퀵버튼)
+# ==========================================
+st.title("👨‍💻 IT 인프라/보안 리더 최준영 AI")
+st.write("제 이력과 포트폴리오에 대해 무엇이든 물어보세요! (아래 버튼을 누르면 바로 질문할 수 있습니다)")
 
-[이력서/포트폴리오 내용]
-(여기에 도트홈 웹사이트에 있는 이력서 텍스트를 통째로 복사해서 붙여넣으세요)
-"""
-
-st.title("👨‍💻 지원자 최준영의 AI 챗봇 비서")
-st.write("제 이력서와 포트폴리오에 대해 무엇이든 물어보세요!")
-
-# 3. 채팅 기록 초기화 및 저장
+# 세션 상태 초기화
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "system", "content": RESUME_CONTEXT},
-        {"role": "assistant", "content": "안녕하세요! IT 인프라 담당자 최준영의 AI 비서입니다. 직무 경험이나 프로젝트에 대해 어떤 점이 궁금하신가요?"}
+        {"role": "system", "content": resume_text},
+        {"role": "assistant", "content": "안녕하세요! 13년 차 시니어 IT 전문가 최준영의 AI 비서입니다. 인프라 아키텍처, 정보보안, ERP 도입 등 궁금하신 점을 말씀해 주세요."}
     ]
 
-# 4. 이전 채팅 기록 화면에 출력 (시스템 프롬프트는 화면에서 숨김)
+# 예상 질문 버튼 레이아웃 (3열)
+col1, col2, col3 = st.columns(3)
+quick_question = None
+
+if col1.button("🚀 주요 인프라/망분리 성과는?"):
+    quick_question = "가장 자신 있는 주요 인프라 구축 및 망분리 성과에 대해 설명해 줘."
+if col2.button("🛡️ 정보보안 및 평가 점수는?"):
+    quick_question = "SEMES 정보보안 평가 대응 및 보안 구축 경험을 알려줘."
+if col3.button("💰 희망 연봉과 그 근거는?"):
+    quick_question = "희망하는 연봉 수준과 그렇게 생각하는 근거를 논리적으로 설명해 줘."
+
+# ==========================================
+# 4. 채팅 UI 및 로직
+# ==========================================
+# 이전 채팅 기록 화면에 출력 (아바타 아이콘 적용)
 for msg in st.session_state.messages:
-    if msg["role"] != "system":
-        with st.chat_message(msg["role"]):
+    if msg["role"] == "user":
+        with st.chat_message("user", avatar="👤"):
+            st.markdown(msg["content"])
+    elif msg["role"] == "assistant":
+        with st.chat_message("assistant", avatar="👨‍💻"):
             st.markdown(msg["content"])
 
-# 5. 채용 담당자의 입력 처리
-if prompt := st.chat_input("예: 주로 다뤄본 서버나 네트워크 장비는 무엇인가요?"):
-    
-    # 질문을 화면에 띄우고 기록에 추가
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    st.session_state.messages.append({"role": "user", "content": prompt})
+# 사용자 입력 처리 (직접 타이핑 OR 퀵버튼 클릭)
+prompt = st.chat_input("질문을 입력해 주세요 (예: 10G 네트워크 구축 경험 알려줘)")
+final_prompt = quick_question if quick_question else prompt
 
-    # Groq API 호출 (Gemma 모델 구동)
-    with st.chat_message("assistant"):
+if final_prompt:
+    # 1. 사용자 질문 출력
+    with st.chat_message("user", avatar="👤"):
+        st.markdown(final_prompt)
+    st.session_state.messages.append({"role": "user", "content": final_prompt})
+
+    # 2. AI 답변 생성 (한국어에 강한 Qwen 모델 추천)
+    with st.chat_message("assistant", avatar="👨‍💻"):
         response = client.chat.completions.create(
-            # Groq에서 지원하는 최신 Gemma 오픈 모델 지정 (예: gemma-7b-it 등)
-            model="openai/gpt-oss-20b", 
+            model="qwen/qwen3-32b", 
             messages=st.session_state.messages,
-            temperature=0.3, # 면접용이므로 엉뚱한 소리를 하지 않도록 창의성(온도)을 낮춤
+            temperature=0.3,
             max_tokens=1024
         )
         answer = response.choices[0].message.content
         st.markdown(answer)
         
-        # 답변을 기록에 추가
+        # 3. 답변 기록 저장
         st.session_state.messages.append({"role": "assistant", "content": answer})
