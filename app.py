@@ -52,11 +52,10 @@ st.markdown("""
         border: none !important;
     }
 
-    /* 질문으로 이동 버튼 스타일 */
+    /* 🚨 <a> 태그 대신 <div>를 사용하여 새창 뜸 방지 */
     .back-link {
         font-size: 12px;
         color: #6b7280;
-        text-decoration: none;
         display: inline-block;
         margin-top: 8px;
         padding: 4px 10px;
@@ -64,6 +63,7 @@ st.markdown("""
         border: 1px solid #d1d5db;
         background: #ffffff;
         cursor: pointer;
+        user-select: none;
     }
     
     .back-link:hover {
@@ -176,13 +176,12 @@ for i, msg in enumerate(st.session_state.messages):
         content = msg["content"].replace("\n", "  \n")
         st.markdown(content, unsafe_allow_html=True)
         
-        # 상단 이동 버튼 (자바스크립트 DOM 조작 방식으로 완벽 교체)
+        # 🚨 새창 방지: <a> 대신 <div onclick="..."> 사용
         if msg["role"] == "assistant" and i > 1:
             st.markdown(f"""
-                <a href="javascript:void(0);" 
-                   onclick="window.parent.document.getElementById('q-{i-1}').scrollIntoView({{behavior: 'smooth', block: 'center'}});" 
-                   class="back-link">↑ 질문 위치로 이동
-                </a>
+                <div onclick="window.parent.document.getElementById('q-{i-1}').scrollIntoView({{behavior: 'smooth', block: 'start'}});" 
+                     class="back-link">↑ 질문 위치로 이동
+                </div>
             """, unsafe_allow_html=True)
 
 if prompt := st.chat_input("궁금한 점을 직접 질문하세요"):
@@ -191,9 +190,25 @@ if prompt := st.chat_input("궁금한 점을 직접 질문하세요"):
     st.rerun()
 
 # ==========================================
-# 6. 통합 AI 응답 생성
+# 6. 하단 자동 스크롤 함수 (렌더링 꼬임 방지)
+# ==========================================
+def scroll_to_bottom():
+    st.components.v1.html("""
+        <script>
+            const doc = window.parent.document;
+            const scrollTarget = doc.querySelector('.main') || doc.body;
+            scrollTarget.scrollTo({ top: scrollTarget.scrollHeight, behavior: 'smooth' });
+        </script>
+    """, height=0)
+
+# ==========================================
+# 7. 통합 AI 응답 생성
 # ==========================================
 if st.session_state.messages[-1]["role"] == "user":
+    
+    # 답변 생성 시작 전에 한 번 내림
+    scroll_to_bottom()
+    
     with st.chat_message("assistant", avatar="🤖"):
         
         message_placeholder = st.empty()
@@ -222,7 +237,6 @@ if st.session_state.messages[-1]["role"] == "user":
                 unsafe_allow_html=True
             )
             try:
-                # 확정된 안정성 최강 모델 (Llama 17b)
                 response = client.chat.completions.create(
                     model="meta-llama/llama-4-scout-17b-16e-instruct",
                     messages=st.session_state.messages,
@@ -255,34 +269,13 @@ if st.session_state.messages[-1]["role"] == "user":
                 st.error("알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
                 st.session_state.messages.pop()
         
-        # 답변 종료 후에도 상단 이동 버튼 렌더링
+        # 답변 종료 후에도 상단 이동 버튼(<div>) 렌더링
         msg_idx = len(st.session_state.messages) - 1
         st.markdown(f"""
-            <a href="javascript:void(0);" 
-               onclick="window.parent.document.getElementById('q-{msg_idx-1}').scrollIntoView({{behavior: 'smooth', block: 'center'}});" 
-               class="back-link">↑ 질문 위치로 이동
-            </a>
+            <div onclick="window.parent.document.getElementById('q-{msg_idx-1}').scrollIntoView({{behavior: 'smooth', block: 'start'}});" 
+                 class="back-link">↑ 질문 위치로 이동
+            </div>
         """, unsafe_allow_html=True)
-
-# ==========================================
-# 7. 자동 스크롤 완벽 보완 (하단 강제 고정)
-# ==========================================
-st.components.v1.html("""
-    <script>
-        const doc = window.parent.document;
-        // 스트림릿의 메인 스크롤 컨테이너를 정확히 타겟팅
-        const scrollTarget = doc.querySelector('.main') || doc.body;
         
-        const forceScroll = () => {
-            scrollTarget.scrollTo({
-                top: scrollTarget.scrollHeight,
-                behavior: 'smooth'
-            });
-        };
-        
-        forceScroll();
-        // 렌더링 지연시간을 고려해 다중 실행으로 스크롤 누락 완벽 방어
-        setTimeout(forceScroll, 100);
-        setTimeout(forceScroll, 500);
-    </script>
-""", height=0)
+    # 답변 생성이 완전히 끝난 후 최종적으로 한 번 더 스크롤 정돈
+    scroll_to_bottom()
