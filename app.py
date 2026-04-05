@@ -12,7 +12,7 @@ st.markdown("""
 <style>
     /* 🚀 하단 광고 배너 안전 영역(Safe Area) 확보 */
     [data-testid="stChatInput"] {
-        padding-bottom: 20px !important; /* 광고창 높이에 맞춰 수치(80px)를 조절하세요 */
+        padding-bottom: 10px !important; /* 광고창 높이에 맞춰 수치(80px)를 조절하세요 */
     }
     
     /* 채팅 내역이 입력창에 가려지지 않도록 메인 컨테이너 하단 여백도 같이 늘려줍니다 */
