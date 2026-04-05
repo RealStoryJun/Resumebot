@@ -1,4 +1,5 @@
 import streamlit as st
+import groq
 from groq import Groq
 import os
 import re
@@ -159,11 +160,12 @@ if final_p:
     st.session_state.messages.append({"role": "user", "content": final_p})
     st.rerun()
 
-# AI 응답 생성 (120b 모델, 스트리밍, 대기 시간 로딩바, 스크롤 추적)
+# ==========================================
+# 6. AI 응답 생성 (스트리밍, 대기 시간 로딩바, 예외 처리)
+# ==========================================
 if st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant", avatar="👨‍💻"):
         
-        # 1. API 통신 전 대기(로딩) 상태 표시
         loading_placeholder = st.empty()
         loading_placeholder.markdown(
             "<div style='text-align: center; color: #4b8bfc; font-size: 13px; font-weight: 500; padding: 15px; border-radius: 10px; background-color: #f0f8ff; margin-bottom: 10px;'>"
@@ -171,75 +173,84 @@ if st.session_state.messages[-1]["role"] == "user":
             unsafe_allow_html=True
         )
         
-        # 메시지 및 생각(Think) 출력용 공간
         think_placeholder = st.empty()
         message_placeholder = st.empty()
         
-        # API 호출 (스트리밍 시작 전까지 대략 1~3초 소요됨)
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=st.session_state.messages,
-            temperature=0.3,
-            stream=True
-        )
-        
-        start_time = time.time()
-        full_response = ""
-        in_think_mode = False
-        first_chunk_received = False
-        
-        for chunk in response:
-            # 2. 첫 데이터 수신 시 최초 대기 로딩바 삭제
-            if not first_chunk_received:
-                loading_placeholder.empty()
-                first_chunk_received = True
-                
-            token = chunk.choices[0].delta.content or ""
-            full_response += token
+        try:
+            # API 호출 (120b 모델 유지)
+            response = client.chat.completions.create(
+                model="openai/gpt-oss-120b",
+                messages=st.session_state.messages,
+                temperature=0.3,
+                stream=True
+            )
             
-            # 3. 모델이 생각(<think>) 중일 때의 애니메이션
-            if "<think>" in full_response and "</think>" not in full_response:
-                in_think_mode = True
-                elapsed = int(time.time() - start_time)
-                dots = "." * ((int(time.time() * 2) % 3) + 1)
-                think_placeholder.markdown(
-                    f"<div style='color: #8b5cf6; font-size: 13px; font-weight: 500; background: #ede9fe; padding: 6px 12px; border-radius: 8px; display: inline-block;'>"
-                    f"🧠 추론 중입니다{dots} ({elapsed}초 경과)</div>", 
-                    unsafe_allow_html=True
-                )
+            start_time = time.time()
+            full_response = ""
+            in_think_mode = False
+            first_chunk_received = False
+            
+            for chunk in response:
+                if not first_chunk_received:
+                    loading_placeholder.empty()
+                    first_chunk_received = True
+                    
+                token = chunk.choices[0].delta.content or ""
+                full_response += token
                 
-            # 4. 생각이 끝나고 실제 답변 타이핑 시작
-            elif "</think>" in full_response:
-                if in_think_mode:
-                    think_placeholder.empty()
-                    in_think_mode = False
-                
-                visible_text = full_response.split("</think>")[-1]
-                message_placeholder.markdown(visible_text.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
-                
-            else:
-                visible_text = full_response
-                message_placeholder.markdown(visible_text.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
-        
-        final_clean_text = full_response.split("</think>")[-1] if "</think>" in full_response else full_response
-        message_placeholder.markdown(final_clean_text.replace("\n", "  \n"), unsafe_allow_html=True)
-        
-        st.markdown(f'<a href="#q-{len(st.session_state.messages)-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
-        st.session_state.messages.append({"role": "assistant", "content": final_clean_text})
-        
-        # 5. 자동 스크롤 추적 (향상된 JS)
-        st.components.v1.html("""
-            <script>
-                const scrollToBottom = () => {
-                    const chatContainer = window.parent.document.querySelector('.main');
-                    if (chatContainer) {
-                        chatContainer.scrollTo({
-                            top: chatContainer.scrollHeight,
-                            behavior: 'smooth'
-                        });
-                    }
-                };
-                scrollToBottom();
-                setTimeout(scrollToBottom, 200); // 렌더링 지연 대비 0.2초 후 한 번 더 보정
-            </script>
-        """, height=0)
+                if "<think>" in full_response and "</think>" not in full_response:
+                    in_think_mode = True
+                    elapsed = int(time.time() - start_time)
+                    dots = "." * ((int(time.time() * 2) % 3) + 1)
+                    think_placeholder.markdown(
+                        f"<div style='color: #8b5cf6; font-size: 13px; font-weight: 500; background: #ede9fe; padding: 6px 12px; border-radius: 8px; display: inline-block;'>"
+                        f"🧠 데이터를 심층 분석 중입니다{dots} ({elapsed}초 경과)</div>", 
+                        unsafe_allow_html=True
+                    )
+                    
+                elif "</think>" in full_response:
+                    if in_think_mode:
+                        think_placeholder.empty()
+                        in_think_mode = False
+                    
+                    visible_text = full_response.split("</think>")[-1]
+                    message_placeholder.markdown(visible_text.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
+                    
+                else:
+                    visible_text = full_response
+                    message_placeholder.markdown(visible_text.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
+            
+            # 스트리밍 완료 후 텍스트 정리
+            final_clean_text = full_response.split("</think>")[-1] if "</think>" in full_response else full_response
+            message_placeholder.markdown(final_clean_text.replace("\n", "  \n"), unsafe_allow_html=True)
+            
+            st.markdown(f'<a href="#q-{len(st.session_state.messages)-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
+            st.session_state.messages.append({"role": "assistant", "content": final_clean_text})
+            
+            # 자동 스크롤 추적 보정 (지연시간 적용)
+            st.components.v1.html("""
+                <script>
+                    const scrollToBottom = () => {
+                        const chatContainer = window.parent.document.querySelector('.main');
+                        if (chatContainer) {
+                            chatContainer.scrollTo({
+                                top: chatContainer.scrollHeight,
+                                behavior: 'smooth'
+                            });
+                        }
+                    };
+                    scrollToBottom();
+                    setTimeout(scrollToBottom, 200); 
+                </script>
+            """, height=0)
+
+        # 트래픽 리밋 에러 방어 코드
+        except groq.RateLimitError:
+            loading_placeholder.empty()
+            st.warning("🚦 **서버 요청 제한 안내**\n\n현재 120b 고성능 AI 모델에 요청이 집중되어 잠시 대기 상태입니다. 약 1분 뒤에 다시 입력해 주시거나 새로고침(F5) 해주세요!")
+            st.session_state.messages.pop() # 에러 났을 때 세션 꼬임 방지
+            
+        except Exception as e:
+            loading_placeholder.empty()
+            st.error("알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
+            st.session_state.messages.pop()
