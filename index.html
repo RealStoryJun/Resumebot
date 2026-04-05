@@ -10,22 +10,20 @@
         :root {
             --bg-color: #ffffff;
             --chat-bg: #f9fafb;
-            --primary: #10a37f; /* ChatGPT 특유의 그린 컬러 */
+            --primary: #10a37f; 
             --text-color: #374151;
             --border-color: #e5e7eb;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* 🚨 모바일 하단 짤림 방지: 100dvh 사용 및 전체 스크롤 차단 */
         body, html { 
             margin: 0; padding: 0; height: 100%; height: 100dvh; 
             font-family: 'Pretendard', -apple-system, sans-serif; 
-            background-color: #f3f4f6; /* PC 환경 배경색 */
+            background-color: #f3f4f6; 
             overflow: hidden; 
         }
 
-        /* 반응형 메인 컨테이너 (PC에서는 800px 중앙 정렬, 모바일에서는 꽉 차게) */
         .main-wrapper {
             display: flex; flex-direction: column; height: 100dvh;
             max-width: 800px; margin: 0 auto; 
@@ -33,7 +31,7 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
         }
 
-        /* 1. 상단 헤더 (고정) */
+        /* 헤더 */
         .header {
             flex-shrink: 0; padding: 15px 20px; border-bottom: 1px solid var(--border-color);
             display: flex; justify-content: space-between; align-items: center; background: white; z-index: 10;
@@ -41,34 +39,12 @@
         .header h1 { margin: 0; font-size: 17px; font-weight: 700; color: #111827; }
         .header .badge { font-size: 11px; background: #f3f4f6; padding: 4px 10px; border-radius: 12px; color: #4b5563; font-weight: 500; }
 
-        /* 2. 중앙 채팅 영역 (이 부분만 스크롤됨) */
+        /* 채팅 영역 */
         .chat-view { 
             flex: 1; overflow-y: auto; padding: 0; scroll-behavior: smooth; background: var(--bg-color); 
         }
 
-        /* 초기 화면 질문 버튼들 */
-        .suggestion-area { padding: 40px 20px 20px; text-align: center; }
-        .suggestion-area h2 { font-size: 22px; margin: 0 0 8px 0; color: #111827; }
-        .suggestion-area p { font-size: 14px; color: #6b7280; margin-bottom: 30px; }
-        
-        /* PC는 2열, 모바일은 1열 그리드 적용 */
-        .suggestion-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 700px; margin: 0 auto;
-        }
-        @media (max-width: 600px) {
-            .suggestion-grid { grid-template-columns: 1fr; } /* 모바일 세로 배치 */
-        }
-        
-        .suggestion-btn {
-            background: white; border: 1px solid var(--border-color); border-radius: 14px;
-            padding: 16px; text-align: left; cursor: pointer; transition: all 0.2s;
-            display: flex; flex-direction: column; gap: 4px;
-        }
-        .suggestion-btn:hover { background: #f9fafb; border-color: #d1d5db; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .suggestion-btn strong { font-size: 14px; color: #1f2937; }
-        .suggestion-btn span { font-size: 13px; color: #6b7280; }
-
-        /* 메시지 버블 (ChatGPT 스타일) */
+        /* 메시지 버블 */
         .msg-row { border-bottom: 1px solid #f3f4f6; }
         .msg-row.assistant { background-color: var(--chat-bg); }
         .msg-inner { max-width: 740px; margin: 0 auto; padding: 24px 20px; display: flex; gap: 16px; }
@@ -82,7 +58,18 @@
         
         .msg-text { flex: 1; font-size: 15px; line-height: 1.65; color: #374151; overflow-x: hidden; }
         
-        /* 마크다운 렌더링 스타일 */
+        /* 🚨 작고 세련된 질문 칩 (ChatGPT 스타일) */
+        .chip-container {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;
+        }
+        .chip {
+            background: white; border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 8px 14px; font-size: 13.5px; color: #4b5563; cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .chip:hover { background: #f9fafb; border-color: var(--primary); color: var(--primary); }
+
+        /* 마크다운 스타일 */
         .msg-text table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; }
         .msg-text th, .msg-text td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: left; }
         .msg-text th { background-color: #f3f4f6; font-weight: 600; color: #111827; }
@@ -91,10 +78,10 @@
         .msg-text p { margin: 0 0 10px 0; }
         .msg-text p:last-child { margin-bottom: 0; }
 
-        /* 3. 하단 입력창 (화면 최하단에 절대 고정) */
+        /* 하단 고정 입력창 */
         .bottom-nav { 
             flex-shrink: 0; padding: 15px 20px; background: white; border-top: 1px solid var(--border-color);
-            padding-bottom: max(15px, env(safe-area-inset-bottom)); /* 아이폰 하단 홈바 영역 회피 */
+            padding-bottom: max(15px, env(safe-area-inset-bottom)); 
         }
         .input-group {
             max-width: 740px; margin: 0 auto; position: relative;
@@ -118,6 +105,9 @@
         }
 
         #streamLoading { display: none; text-align: center; color: var(--primary); font-size: 13px; font-weight: 600; padding: 20px; }
+        
+        /* 에러 메시지 박스 */
+        .error-box { background: #fef2f2; border: 1px solid #f87171; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -129,37 +119,24 @@
     </div>
 
     <div class="chat-view" id="chatView">
-        <div id="initialScreen" class="suggestion-area">
-            <h2>어떤 것이 궁금하신가요?</h2>
-            <p>면접관님을 위한 핵심 질문 리스트입니다.</p>
-            <div class="suggestion-grid">
-                <button class="suggestion-btn" onclick="askQuick('btn1')">
-                    <strong>📄 증빙자료 링크</strong><span>포트폴리오 및 각종 문서 확인</span>
-                </button>
-                <button class="suggestion-btn" onclick="askQuick('btn2')">
-                    <strong>🚀 주요 성과</strong><span>10G 고도화 및 ERP 도입 성과</span>
-                </button>
-                <button class="suggestion-btn" onclick="askQuick('btn3')">
-                    <strong>💰 연봉 및 강점</strong><span>처우 제안 및 해결사 역량</span>
-                </button>
-                <button class="suggestion-btn" onclick="askQuick('btn4')">
-                    <strong>🛠️ 기술 스택</strong><span>보안·인프라·AI 핵심 기술</span>
-                </button>
-                <button class="suggestion-btn" onclick="askQuick('btn5')">
-                    <strong>🏆 차별화 역량</strong><span>디자인과 AI를 융합하는 능력</span>
-                </button>
-            </div>
-        </div>
-
         <div id="chatFlow">
             <div class="msg-row assistant">
                 <div class="msg-inner">
                     <div class="avatar assistant">🤖</div>
-                    <div class="msg-text">안녕하세요! 최준영 지원자의 AI 면접 비서입니다. 무엇이든 물어보세요.</div>
+                    <div class="msg-text">
+                        안녕하세요! 최준영 지원자의 AI 면접 비서입니다.<br>무엇이든 자유롭게 질문하시거나, 아래의 핵심 질문을 눌러보세요.
+                        <div class="chip-container">
+                            <button class="chip" onclick="askQuick('btn1')">📄 증빙자료 링크</button>
+                            <button class="chip" onclick="askQuick('btn2')">🚀 주요 성과</button>
+                            <button class="chip" onclick="askQuick('btn3')">💰 연봉 및 강점</button>
+                            <button class="chip" onclick="askQuick('btn4')">🛠️ 기술 스택</button>
+                            <button class="chip" onclick="askQuick('btn5')">🏆 차별화 역량</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div id="streamLoading">⏳ AI가 데이터를 분석하며 답변을 작성 중입니다...</div>
+        <div id="streamLoading">⏳ AI가 답변을 작성 중입니다...</div>
     </div>
 
     <div class="bottom-nav">
@@ -171,19 +148,18 @@
 </div>
 
 <script>
-    // 마크다운 파서 설정
     marked.setOptions({ breaks: true });
 
+    // 💡 워커 URL 확인 필수!
     const WORKER_URL = "https://resumebot.god8night.workers.dev";
     let systemPrompt = "";
     let messages = [];
 
-    // resume.md 로드 (app.py 기능)
     async function initSystem() {
         try {
             const res = await fetch('resume.md');
             const resumeContent = await res.text();
-            systemPrompt = `너는 IT 인프라 및 정보보안 직무에 지원하는 13년 3차 시니어 IT 전문가 '최준영'을 대변하는 AI 면접 비서야.
+            systemPrompt = `너는 IT 인프라 및 정보보안 직무에 지원하는 13년차 시니어 IT 전문가 '최준영'을 대변하는 AI 면접 비서야.
 아래 제공된 나의 이력서 데이터를 완벽히 숙지하고, 채용 담당자의 질문에 전문적이고 자신감 있게 답변해.
 
 --- 이력서 데이터 ---
@@ -193,7 +169,6 @@ ${resumeContent}
     }
     initSystem();
 
-    // 사전 정의된 답변 (마크다운 포함)
     const quickData = {
         "btn1": { q: "이력서, 포트폴리오 및 증빙자료 링크를 표 형태로 정리해 줘.", a: "지원자 최준영의 핵심 증빙자료 및 포트폴리오 링크를 안내해 드립니다.\n\n| 문서/프로젝트 | 다운로드 및 접속 링크 |\n|---|---|\n| 📄 **웹 이력서 (Main)** | [바로가기](https://realstoryjun.dothome.co.kr/resume) |\n| 📊 **이력서 (PDF)** | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/resume.pdf) |\n| 📝 **자기소개서 (PDF)** | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Selfintroduction.pdf) |\n| 🎨 **포트폴리오 (PDF)** | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Portfolio.pdf) |\n| 🚀 **웹앱 (바리가자)** | [접속하기](https://www.barigaja.co.kr/) |\n| 🧠 **SaaS (Fasttrack2)** | [접속하기](https://realstoryjun.dothome.co.kr/fasttrack2) |" },
         "btn2": { q: "10G 고도화 및 ERP 도입 등 주요 인프라 구축 성과를 요약해 줘.", a: "✅ **에이치아이티(주) (2021.06 ~ 2025.05) 주요 성과**\n\n1. **인프라 고도화 (SLA 99.99%)**\n- 10G 광랜(SFP+) 3차 네트워크 고도화 및 Cisco L3 기반 VLAN 최적화\n- DB 서버 OS(Nvme)/Data 분리 구성 및 3중 자동 백업 체계 구축\n\n2. **정보보안 및 규정 확립**\n- 24년 SEMES 보안 평가 53개 항목 82.78점 획득 (전년 대비 상향)\n- 불법 SW 설치 원천 차단(화이트리스트) 및 방화벽 통제권한 자체 제어\n\n3. **전사 시스템(ERP) PM**\n- 영림원 ERP 전사 도입 총괄 및 다우오피스 그룹웨어 연동 구축" },
@@ -216,8 +191,6 @@ ${resumeContent}
     }
 
     function appendBubble(role, content, index = null) {
-        document.getElementById('initialScreen').style.display = 'none';
-        
         const flow = document.getElementById('chatFlow');
         const row = document.createElement('div');
         row.className = `msg-row ${role}`;
@@ -304,6 +277,12 @@ ${resumeContent}
                 body: JSON.stringify({ messages: messages })
             });
 
+            // 🚨 API 연결 실패 시 정확한 원인을 추적하는 코드
+            if (!res.ok) {
+                const errData = await res.text();
+                throw new Error(`HTTP ${res.status}: ${errData}`);
+            }
+
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
             let full = "";
@@ -332,9 +311,16 @@ ${resumeContent}
             addBackLink(textDiv, idx);
             messages.push({role: "assistant", content: full});
             scrollChat();
+            
         } catch(e) { 
             document.getElementById('streamLoading').style.display = 'none';
-            textDiv.innerHTML = "🚦 서버 연결에 실패했습니다. 다시 시도해주세요."; 
+            // 화면에 붉은색 박스로 에러 원인을 그대로 출력합니다.
+            textDiv.innerHTML = `
+                <div class="error-box">
+                    <strong>🚦 통신 에러가 발생했습니다.</strong><br>
+                    ${e.message}<br><br>
+                    <span style="color:#4b5563;">💡 Worker 주소가 맞는지, API 키가 등록되었는지 확인해주세요.</span>
+                </div>`;
         } finally {
             setInputState(false);
         }
