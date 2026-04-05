@@ -96,12 +96,11 @@ if "messages" not in st.session_state:
         {"role": "assistant", "content": "안녕하세요👋\n\n시니어 IT 리더 최준영의 AI 면접 비서입니다.\n\n경력, 프로젝트 성과, 기술 역량 등 궁금한 점은 무엇이든 물어보세요. 위 버튼을 활용하시면 더 편리합니다."}
     ]
 
-# 캐싱된 하드코딩 응답을 저장할 세션 변수 초기화
 if "pending_hardcoded" not in st.session_state:
     st.session_state.pending_hardcoded = None
 
 # ==========================================
-# 3. 사전 정의된 답변(캐싱 데이터) - 토큰 소모 0!
+# 3. 사전 정의된 답변(캐싱 데이터)
 # ==========================================
 hardcoded_responses = {
     "btn1": {
@@ -139,11 +138,10 @@ st.markdown("""
 <hr style="border: none; border-top: 1px solid #f3f4f6; margin-bottom: 25px;">
 """, unsafe_allow_html=True)
 
-# 버튼 로직: 클릭 시 사용자 메시지 추가 및 하드코딩 응답 대기상태로 전환
 def handle_quick_question(btn_key):
     st.session_state.messages.append({"role": "user", "content": hardcoded_responses[btn_key]["q"]})
     st.session_state.pending_hardcoded = hardcoded_responses[btn_key]["a"]
-    st.rerun() # 리런하여 메인 루프에서 AI처럼 출력하도록 함
+    st.rerun()
 
 if st.button("📄 증빙자료 링크"): handle_quick_question("btn1")
 if st.button("🚀 핵심 프로젝트"): handle_quick_question("btn2")
@@ -164,7 +162,6 @@ st.markdown("""
 # ==========================================
 for i, msg in enumerate(st.session_state.messages):
     if msg["role"] == "system": continue
-    # 사용자 이모지는 👤, AI 비서는 🤖
     avatar_emoji = "👤" if msg["role"] == "user" else "🤖"
     
     with st.chat_message(msg["role"], avatar=avatar_emoji):
@@ -175,96 +172,50 @@ for i, msg in enumerate(st.session_state.messages):
         if msg["role"] == "assistant" and i > 1:
             st.markdown(f'<a href="#q-{i-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
 
-# 하단 텍스트 입력창
 if prompt := st.chat_input("궁금한 점을 직접 질문하세요"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.session_state.pending_hardcoded = None # 직접 입력 시 캐싱 비활성화
+    st.session_state.pending_hardcoded = None 
     st.rerun()
 
 # ==========================================
-# 6. 통합 AI 응답 생성 (가짜 스트리밍 + 진짜 AI 결합)
+# 6. 실시간 강제 스크롤 옵저버 (가장 핵심 포인트!)
+# ==========================================
+# AI가 답변을 출력하기 직전에 옵저버를 미리 깔아둬서, 글자가 하나씩 찍힐 때마다 무조건 화면을 내립니다.
+st.components.v1.html("""
+    <script>
+        const doc = window.parent.document;
+        const chatContainer = doc.querySelector('.main');
+        if (chatContainer) {
+            // 일단 현재 위치에서 맨 밑으로 즉시 이동
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // 글자가 화면에 추가되는 것을 감지하는 옵저버 설정
+            const observer = new MutationObserver(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+            observer.observe(chatContainer, { childList: true, subtree: true });
+        }
+    </script>
+""", height=0)
+
+# ==========================================
+# 7. 통합 AI 응답 생성
 # ==========================================
 if st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant", avatar="🤖"):
         
         message_placeholder = st.empty()
         
-        # 📌 케이스 A: 버튼을 눌렀을 때 (API 소모 없이 가짜 스트리밍 생성)
+        # 📌 케이스 A: 버튼 클릭 시 (가짜 스트리밍)
         if st.session_state.pending_hardcoded:
             full_response = ""
             target_text = st.session_state.pending_hardcoded
             
-            # 글자를 3글자씩 쪼개서 진짜 AI가 타이핑하는 것처럼 연출
             chunk_size = 3
             for i in range(0, len(target_text), chunk_size):
                 full_response += target_text[i:i+chunk_size]
                 message_placeholder.markdown(full_response.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
-                time.sleep(0.01) # 미세한 딜레이
+                time.sleep(0.01)
                 
             message_placeholder.markdown(full_response.replace("\n", "  \n"), unsafe_allow_html=True)
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
-            st.session_state.pending_hardcoded = None # 처리 완료 후 비우기
-            
-        # 📌 케이스 B: 직접 타자를 쳤을 때 (진짜 LLM 호출)
-        else:
-            loading_placeholder = st.empty()
-            loading_placeholder.markdown(
-                "<div style='text-align: center; color: #4b8bfc; font-size: 13px; font-weight: 500; padding: 15px; border-radius: 10px; background-color: #f0f8ff; margin-bottom: 10px;'>"
-                "⏳ AI가 데이터를 심층 분석 중입니다...</div>", 
-                unsafe_allow_html=True
-            )
-            try:
-                response = client.chat.completions.create(
-                    model="meta-llama/llama-4-scout-17b-16e-instruct",
-                    messages=st.session_state.messages,
-                    temperature=0.3,
-                    stream=True
-                )
-                
-                full_response = ""
-                first_chunk_received = False
-                
-                for chunk in response:
-                    if not first_chunk_received:
-                        loading_placeholder.empty()
-                        first_chunk_received = True
-                        
-                    token = chunk.choices[0].delta.content or ""
-                    full_response += token
-                    message_placeholder.markdown(full_response.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
-                
-                message_placeholder.markdown(full_response.replace("\n", "  \n"), unsafe_allow_html=True)
-                st.session_state.messages.append({"role": "assistant", "content": full_response})
-
-            except groq.RateLimitError:
-                loading_placeholder.empty()
-                st.warning("🚦 **서버 요청 제한 안내**\n\n현재 대기열이 많습니다. 1분 뒤 다시 시도해 주세요.")
-                st.session_state.messages.pop() 
-                
-            except Exception as e:
-                loading_placeholder.empty()
-                st.error("알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
-                st.session_state.messages.pop()
-        
-        # 완료 후 돌아가기 링크 추가
-        st.markdown(f'<a href="#q-{len(st.session_state.messages)-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
-
-# ==========================================
-# 7. 자동 스크롤 자바스크립트 (어떤 방식이든 무조건 하단 고정)
-# ==========================================
-st.components.v1.html("""
-    <script>
-        const scrollToBottom = () => {
-            const chatContainer = window.parent.document.querySelector('.main');
-            if (chatContainer) {
-                chatContainer.scrollTo({
-                    top: chatContainer.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }
-        };
-        scrollToBottom();
-        setTimeout(scrollToBottom, 100); 
-        setTimeout(scrollToBottom, 300); 
-    </script>
-""", height=0)
+            st.session_
