@@ -215,18 +215,20 @@ function scrollToTopChat() {
     document.getElementById('chatView').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// [핵심] 폼 제출 처리
+// [수정된 폼 제출 함수]
 async function handleUserSubmit(event) {
-    event.preventDefault();
+    if (event) event.preventDefault();
     const input = document.getElementById('queryInput');
-    const sendBtn = document.getElementById('sendBtn');
     const text = input.value.trim();
 
     if (!text) return;
 
-    // 1. 입력창 초기화 및 포커스 유지 (이게 핵심!)
+    // 1단계: 전송 버튼 누르자마자 입력창 비우고 포커스 강제 고정
     input.value = "";
     input.focus(); 
+
+    // 전송 중에도 입력을 막지 않으려면 disabled를 절대 쓰지 마세요.
+    // input.disabled = true; <-- 이 코드가 있다면 반드시 지우거나 주석처리!
 
     await sendMessage(text);
 }
@@ -247,16 +249,13 @@ function askQuick(id) {
 // [핵심] 메시지 전송 로직
 async function sendMessage(userText) {
     const input = document.getElementById('queryInput');
-    const sendBtn = document.getElementById('sendBtn');
     const loading = document.getElementById('streamLoading');
 
     appendMessageToUI("user", userText);
     messages.push({ role: "user", content: userText });
 
-    if (messages.length > 10) messages = messages.slice(-10);
-
-    // 전송 중 상태 변경 (필요 시 유지, 커서 때문이면 disabled 안 해도 됨)
-    // input.disabled = true; 
+    // 입력창이 비워진 상태에서 다시 한번 포커스 확인 (모바일 대응)
+    input.focus();
 
     try {
         loading.style.display = "block";
@@ -265,8 +264,6 @@ async function sendMessage(userText) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ messages: messages }) 
         });
-
-        if (!response.ok) throw new Error(`서버 에러: ${response.status}`);
 
         loading.style.display = "none";
         const reader = response.body.getReader();
@@ -290,8 +287,14 @@ async function sendMessage(userText) {
                         const data = JSON.parse(dataStr);
                         if (data.choices[0].delta.content) {
                             assistantText += data.choices[0].delta.content;
+                            
+                            // 2단계: AI가 답변을 한 글자씩 써내려갈 때(스트리밍) 
+                            // 화면이 갱신되더라도 커서가 입력창을 떠나지 않게 유지
                             aiMessageBox.innerHTML = marked.parse(assistantText);
                             scrollToBottom();
+                            
+                            // 만약 타이핑 중에 커서가 자꾸 사라진다면 아래 한 줄 추가
+                            // if (document.activeElement !== input) input.focus();
                         }
                     } catch (e) { console.error(e); }
                 }
@@ -300,12 +303,14 @@ async function sendMessage(userText) {
         messages.push({ role: "assistant", content: assistantText });
 
     } catch (error) {
-        console.error(error);
-        appendMessageToUI("assistant", "⚠️ 통신 중 에러가 발생했습니다.");
+        appendMessageToUI("assistant", "⚠️ 에러가 발생했습니다.");
     } finally {
         loading.style.display = "none";
-        input.disabled = false;
-        input.focus(); // ❗ 답변이 끝난 후에도 다시 커서를 잡아줌
+        
+        // 3단계: 답변이 완전히 끝난 후 최종적으로 커서 다시 잡기
+        setTimeout(() => {
+            input.focus();
+        }, 10); 
     }
 }
 </script>
