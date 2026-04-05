@@ -10,6 +10,16 @@ st.set_page_config(page_title="최준영 AI 비서", page_icon="👨‍💻", la
 
 st.markdown("""
 <style>
+    /* 🚀 하단 광고 배너 안전 영역(Safe Area) 확보 */
+    [data-testid="stChatInput"] {
+        padding-bottom: 80px !important; /* 광고창 높이에 맞춰 수치(80px)를 조절하세요 */
+    }
+    
+    /* 채팅 내역이 입력창에 가려지지 않도록 메인 컨테이너 하단 여백도 같이 늘려줍니다 */
+    .block-container {
+        padding-bottom: 120px !important; 
+    }
+
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     
     html, body, [class*="css"] {
