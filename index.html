@@ -47,7 +47,7 @@
             <button type="button" class="scroll-top-btn" onmousedown="event.preventDefault()" onclick="scrollToTopChat()">⬆ 맨위로</button>
             <input type="text" id="queryInput" placeholder="이력서 데이터를 불러오는 중입니다..." autocomplete="off" disabled>
             <!-- ✅ 전송 버튼: mousedown 차단 불필요 (submit 후 focus 복귀로 처리) -->
-            <button type="submit" class="send-btn" id="sendBtn" disabled>↑</button>
+            <button type="submit" class="send-btn" id="sendBtn" onmousedown="event.preventDefault()" disabled>↑</button>
         </form>
     </div>
 </div>
@@ -65,16 +65,13 @@ window.onload = () => {
     input.focus();
 
     // ✅ [수정 4] blur 방어 리스너 — 핵심!
-    input.addEventListener('blur', () => {
-        setTimeout(() => {
-            // 페이지가 활성 상태이고, 포커스가 body(아무것도 아닌 곳)에 있을 때만 복귀
-            // → 탭 전환, 다른 input 클릭 등은 정상 작동
-            if (document.hasFocus() && document.activeElement === document.body) {
-                input.focus();
-            }
-        }, 50);
+input.addEventListener('blur', () => {
+    requestAnimationFrame(() => {
+        if (document.hasFocus() && document.activeElement === document.body) {
+            input.focus();
+        }
     });
-};
+});
 
 // ✅ [수정 5] 채팅뷰 클릭 시 포커스 차단 (텍스트 드래그 선택은 허용)
 function keepInputFocus(e) {
