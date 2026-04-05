@@ -161,24 +161,23 @@
 <script>
 marked.setOptions({ breaks: true });
 
-const WORKER_URL = "https://resumebot.god8night.workers.dev"; // 본인의 실제 워커 주소
+const WORKER_URL = "https://resumebot.god8night.workers.dev"; 
 let messages = [];
 
-// [초기화] 페이지 로드 시 입력창 활성화 및 포커스
+// [초기화]
 window.onload = () => {
     const input = document.getElementById('queryInput');
     input.disabled = false;
     input.placeholder = "최준영 지원자에 대해 궁금한 점을 물어보세요...";
     document.getElementById('sendBtn').disabled = false;
-    input.focus(); // 첫 접속 시 커서 주기
+    input.focus(); 
 };
 
-// [UI] 메시지 화면에 추가
+// [UI] 메시지 추가 (appendChild 사용으로 기존 요소 보존)
 function appendMessageToUI(role, text) {
     const chatFlow = document.getElementById('chatFlow');
     const row = document.createElement('div');
     row.className = `msg-row ${role}`;
-    
     row.innerHTML = `
         <div class="msg-inner">
             <div class="avatar ${role}">${role === 'assistant' ? '🤖' : '👤'}</div>
@@ -189,7 +188,6 @@ function appendMessageToUI(role, text) {
     scrollToBottom();
 }
 
-// [UI] AI 답변용 박스 생성
 function createAiMessageBoxUI() {
     const chatFlow = document.getElementById('chatFlow');
     const row = document.createElement('div');
@@ -204,18 +202,12 @@ function createAiMessageBoxUI() {
     return row.querySelector('.msg-text');
 }
 
-// [UI] 스크롤 하단 이동
 function scrollToBottom() {
     const chatView = document.getElementById('chatView');
-    chatView.scrollTop = chatView.scrollHeight;
+    chatView.scrollTo({ top: chatView.scrollHeight, behavior: 'auto' }); // behavior를 auto로 하여 즉시 이동
 }
 
-// [UI] 맨 위로 스크롤
-function scrollToTopChat() {
-    document.getElementById('chatView').scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// [수정된 폼 제출 함수]
+// [핵심] 제출 함수
 async function handleUserSubmit(event) {
     if (event) event.preventDefault();
     const input = document.getElementById('queryInput');
@@ -223,17 +215,13 @@ async function handleUserSubmit(event) {
 
     if (!text) return;
 
-    // 1단계: 전송 버튼 누르자마자 입력창 비우고 포커스 강제 고정
     input.value = "";
-    input.focus(); 
-
-    // 전송 중에도 입력을 막지 않으려면 disabled를 절대 쓰지 마세요.
-    // input.disabled = true; <-- 이 코드가 있다면 반드시 지우거나 주석처리!
+    // 전송 직후 즉시 포커스 (가장 중요)
+    setTimeout(() => input.focus(), 0); 
 
     await sendMessage(text);
 }
 
-// [핵심] 퀵 버튼 처리
 function askQuick(id) {
     const questions = {
         btn1: "증빙자료(경력증명서 등)는 어디서 보나요?",
@@ -246,7 +234,6 @@ function askQuick(id) {
     sendMessage(questions[id]);
 }
 
-// [핵심] 메시지 전송 로직
 async function sendMessage(userText) {
     const input = document.getElementById('queryInput');
     const loading = document.getElementById('streamLoading');
@@ -254,11 +241,10 @@ async function sendMessage(userText) {
     appendMessageToUI("user", userText);
     messages.push({ role: "user", content: userText });
 
-    // 입력창이 비워진 상태에서 다시 한번 포커스 확인 (모바일 대응)
-    input.focus();
-
     try {
+        // loading 표시가 레이아웃을 흔들지 않도록 주의 (필요 없다면 주석 처리 권장)
         loading.style.display = "block";
+        
         const response = await fetch(WORKER_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -266,6 +252,10 @@ async function sendMessage(userText) {
         });
 
         loading.style.display = "none";
+        
+        // 데이터가 오기 시작하면 다시 포커스 확인
+        input.focus();
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let assistantText = "";
@@ -287,16 +277,15 @@ async function sendMessage(userText) {
                         const data = JSON.parse(dataStr);
                         if (data.choices[0].delta.content) {
                             assistantText += data.choices[0].delta.content;
-                            
-                            // 2단계: AI가 답변을 한 글자씩 써내려갈 때(스트리밍) 
-                            // 화면이 갱신되더라도 커서가 입력창을 떠나지 않게 유지
                             aiMessageBox.innerHTML = marked.parse(assistantText);
                             scrollToBottom();
                             
-                            // 만약 타이핑 중에 커서가 자꾸 사라진다면 아래 한 줄 추가
-                            // if (document.activeElement !== input) input.focus();
+                            // 스트리밍 도중 커서가 풀리는 것을 방지하는 최종 병기
+                            if (document.activeElement !== input) {
+                                input.focus();
+                            }
                         }
-                    } catch (e) { console.error(e); }
+                    } catch (e) {}
                 }
             }
         }
@@ -306,11 +295,8 @@ async function sendMessage(userText) {
         appendMessageToUI("assistant", "⚠️ 에러가 발생했습니다.");
     } finally {
         loading.style.display = "none";
-        
-        // 3단계: 답변이 완전히 끝난 후 최종적으로 커서 다시 잡기
-        setTimeout(() => {
-            input.focus();
-        }, 10); 
+        // 모든 상황 종료 후 포커스 재확인
+        setTimeout(() => input.focus(), 10);
     }
 }
 </script>
