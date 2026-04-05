@@ -12,6 +12,7 @@
             --chat-bg: #f9fafb;
             --primary: #10a37f; 
             --border-color: #e5e7eb;
+            --header-bg: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -24,56 +25,110 @@
         .main-wrapper {
             display: flex; flex-direction: column; height: 100dvh;
             max-width: 800px; margin: 0 auto; background: var(--bg-color);
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
         }
 
-        .header { flex-shrink: 0; padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: white; }
-        .header h1 { margin: 0; font-size: 17px; font-weight: 700; }
+        /* 💎 고급스러워진 상단 헤더 디자인 */
+        .header { 
+            flex-shrink: 0; padding: 16px 20px; 
+            background: var(--header-bg); color: white;
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10;
+        }
+        .header-title { display: flex; align-items: center; gap: 8px; }
+        .header-title h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+        .status-dot { width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
+        .header .badge { 
+            font-size: 11px; background: rgba(255,255,255,0.1); 
+            padding: 5px 12px; border-radius: 20px; font-weight: 600; 
+            border: 1px solid rgba(255,255,255,0.2); letter-spacing: 0.3px;
+        }
 
-        .chat-view { flex: 1; overflow-y: auto; background: var(--bg-color); overflow-anchor: auto; }
-        .msg-row { border-bottom: 1px solid #f3f4f6; }
+        /* 채팅 영역 */
+        .chat-view { flex: 1; overflow-y: auto; background: var(--bg-color); overflow-anchor: auto; scroll-behavior: smooth; }
+        .msg-row { border-bottom: 1px solid #f3f4f6; padding: 10px 0; }
         .msg-row.assistant { background-color: var(--chat-bg); }
-        .msg-inner { max-width: 740px; margin: 0 auto; padding: 24px 20px; display: flex; gap: 16px; }
+        .msg-inner { max-width: 740px; margin: 0 auto; padding: 15px 20px; display: flex; gap: 14px; }
         
-        .avatar { width: 30px; height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
-        .avatar.assistant { background: var(--primary); color: white; }
+        .avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+        .avatar.assistant { background: var(--header-bg); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .avatar.user { background: #e5e7eb; }
         
-        .msg-text { flex: 1; font-size: 15px; line-height: 1.65; color: #374151; }
+        .msg-text { flex: 1; font-size: 15px; line-height: 1.6; color: #374151; margin-top: 4px; }
+        .msg-text p { margin: 0 0 10px 0; }
+        .msg-text p:last-child { margin-bottom: 0; }
         
-        /* 퀵 버튼 공통 스타일 */
+        /* 퀵 버튼 스타일 */
         .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
         .chip {
-            background: white; border: 1px solid var(--border-color); border-radius: 16px;
-            padding: 8px 14px; font-size: 13.5px; color: #4b5563; cursor: pointer; transition: 0.2s;
+            background: white; border: 1px solid var(--border-color); border-radius: 20px;
+            padding: 8px 16px; font-size: 13.5px; font-weight: 500; color: #4b5563; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
         .chip:hover { border-color: var(--primary); color: var(--primary); background: #f0fdf4; }
+        .chip.highlight { border-color: var(--primary); color: var(--primary); font-weight: 700; background: #f0fdf4; }
 
+        /* 하단 입력창 영역 */
         .bottom-nav { flex-shrink: 0; padding: 15px 20px; background: white; border-top: 1px solid var(--border-color); padding-bottom: max(15px, env(safe-area-inset-bottom)); }
-        .input-group { max-width: 740px; margin: 0 auto; background: white; border: 1px solid #d1d5db; border-radius: 16px; display: flex; align-items: center; padding: 5px 12px; }
-        .input-group input { flex: 1; border: none; background: transparent; font-size: 15px; outline: none; padding: 10px 0; }
-        .send-btn { background: var(--primary); color: white; border: none; border-radius: 12px; width: 32px; height: 32px; cursor: pointer; }
+        .input-group { 
+            max-width: 740px; margin: 0 auto; background: white; border: 1px solid #d1d5db; 
+            border-radius: 16px; display: flex; align-items: center; padding: 6px 6px 6px 12px; gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .input-group:focus-within { border-color: var(--primary); }
+        
+        /* 맨위로 버튼 복구 & 세련된 디자인 적용 */
+        .scroll-top-btn {
+            background: #f3f4f6; color: #6b7280; border: none; border-radius: 10px;
+            width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 16px; transition: 0.2s; flex-shrink: 0;
+        }
+        .scroll-top-btn:hover { background: #e5e7eb; color: #374151; }
 
-        #streamLoading { display: none; text-align: center; color: var(--primary); font-size: 12px; padding: 10px; }
+        .input-group input { flex: 1; border: none; background: transparent; font-size: 15px; outline: none; padding: 10px 0; }
+        .send-btn { background: var(--primary); color: white; border: none; border-radius: 12px; width: 36px; height: 36px; cursor: pointer; flex-shrink: 0; font-size: 16px; display: flex; justify-content: center; align-items: center; }
+
+        #streamLoading { display: none; text-align: center; color: var(--primary); font-size: 13px; padding: 15px; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="main-wrapper">
     <div class="header">
-        <h1>최준영 AI 비서</h1>
-        <div class="badge" style="font-size: 11px; background: #f3f4f6; padding: 4px 10px; border-radius: 12px;">Senior IT Infra/Security</div>
+        <div class="header-title">
+            <span class="status-dot"></span>
+            <h1>최준영 AI 비서</h1>
+        </div>
+        <div class="badge">Senior IT Infra</div>
     </div>
 
     <div class="chat-view" id="chatView">
         <div id="chatFlow">
+            <div class="msg-row assistant">
+                <div class="msg-inner">
+                    <div class="avatar assistant">🤖</div>
+                    <div class="msg-text">
+                        안녕하세요! 최준영 지원자의 AI 면접 비서입니다. 무엇이든 자유롭게 질문하시거나, 아래의 핵심 질문을 눌러보세요.
+                        <div class="chip-container">
+                            <button type="button" class="chip highlight" onmousedown="event.preventDefault(); askQuick('btn6')">📞 연락처 확인</button>
+                            <button type="button" class="chip" onmousedown="event.preventDefault(); askQuick('btn1')">📄 증빙자료</button>
+                            <button type="button" class="chip" onmousedown="event.preventDefault(); askQuick('btn2')">🚀 주요 성과</button>
+                            <button type="button" class="chip" onmousedown="event.preventDefault(); askQuick('btn3')">💰 연봉·강점</button>
+                            <button type="button" class="chip" onmousedown="event.preventDefault(); askQuick('btn4')">🛠️ 기술 스택</button>
+                            <button type="button" class="chip" onmousedown="event.preventDefault(); askQuick('btn5')">🏆 차별화</button>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
         <div id="streamLoading">⏳ AI가 답변을 작성 중입니다...</div>
     </div>
 
     <div class="bottom-nav">
         <form class="input-group" id="chatForm" onsubmit="handleUserSubmit(event)">
+            <button type="button" class="scroll-top-btn" onclick="scrollToTopChat()" title="채팅 맨 위로 이동">⬆</button>
             <input type="text" id="queryInput" placeholder="질문을 입력하세요..." autocomplete="off">
-            <button type="submit" class="send-btn">↑</button>
+            <button type="submit" class="send-btn" onmousedown="event.preventDefault()">↑</button>
         </form>
     </div>
 </div>
@@ -86,49 +141,28 @@
     const input = document.getElementById('queryInput');
     const chatView = document.getElementById('chatView');
 
-    // 1. [해결] 퀵 버튼 데이터 단일화 (Source of Truth)
+    // 퀵 질문 데이터 매핑
     const QUICK_QUESTIONS = {
-        btn6: { icon: "📞", label: "연락처 확인", q: "최준영 지원자의 연락처와 이메일을 알려줘." },
-        btn1: { icon: "📄", label: "증빙자료", q: "경력증명서나 포트폴리오 같은 증빙자료는 어디서 보나요?" },
-        btn2: { icon: "🚀", label: "주요 성과", q: "핵심적인 프로젝트 성과 3가지만 요약해줘." },
-        btn3: { icon: "💰", label: "연봉·강점", q: "희망 연봉과 최준영만의 강점은?" },
-        btn4: { icon: "🛠️", label: "기술 스택", q: "주요 기술 스택(인프라, 보안, AI)을 알려줘." },
-        btn5: { icon: "🏆", label: "차별화", q: "다른 시니어 엔지니어와 차별화되는 점은?" }
+        btn6: "최준영 지원자의 연락처와 이메일을 알려줘.",
+        btn1: "경력증명서나 포트폴리오 같은 증빙자료는 어디서 보나요?",
+        btn2: "핵심적인 프로젝트 성과 3가지만 요약해줘.",
+        btn3: "희망 연봉과 최준영만의 강점은?",
+        btn4: "주요 기술 스택(인프라, 보안, AI)을 알려줘.",
+        btn5: "다른 시니어 엔지니어와 차별화되는 점은?"
     };
 
-    function createQuickButtons() {
-        let html = '<div class="chip-container">';
-        for (const key in QUICK_QUESTIONS) {
-            const item = QUICK_QUESTIONS[key];
-            html += `<button class="chip" onclick="askQuick('${key}')">${item.icon} ${item.label}</button>`;
-        }
-        html += '</div>';
-        return html;
+    // [데스크탑 커서 해결 1] 접속 시 무조건 커서 잡기
+    window.onload = () => input.focus();
+
+    // 빈 공간 클릭 시 자연스럽게 커서 복구 (강제 방해 이벤트 모두 삭제)
+    chatView.addEventListener('click', () => {
+        if (window.getSelection().toString() === '') input.focus();
+    });
+
+    // 최상단 이동 함수
+    function scrollToTopChat() {
+        chatView.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    // 초기 인사말 생성
-    window.onload = () => {
-        const welcomeText = `안녕하세요! 최준영 지원자의 AI 면접 비서입니다. 무엇이든 질문하시거나 아래 버튼을 눌러보세요.${createQuickButtons()}`;
-        appendMessageToUI("assistant", welcomeText, true); // true는 마크다운 파싱 제외(이미 HTML 포함)
-        input.focus();
-    };
-
-    // 2. [해결] 데스크탑용 초강력 포커스 유지
-    // 클릭 시 텍스트 선택 중이 아니면 무조건 포커스 복구
-    chatView.addEventListener('mouseup', () => {
-        if (window.getSelection().toString() === '') {
-            input.focus();
-        }
-    });
-
-    // GPT 제안: blur 방어 강화 (setTimeout 0 사용)
-    input.addEventListener('blur', () => {
-        setTimeout(() => {
-            if (document.activeElement !== input) {
-                input.focus();
-            }
-        }, 10);
-    });
 
     function scrollToBottom() {
         chatView.scrollTo({ top: chatView.scrollHeight, behavior: 'smooth' });
@@ -144,8 +178,9 @@
         await sendMessage(text);
     }
 
+    // 퀵 버튼 클릭 실행 함수
     function askQuick(id) {
-        sendMessage(QUICK_QUESTIONS[id].q);
+        sendMessage(QUICK_QUESTIONS[id]);
         input.focus();
     }
 
@@ -184,11 +219,9 @@
                             const data = JSON.parse(dataStr);
                             if (data.choices[0].delta.content) {
                                 assistantText += data.choices[0].delta.content;
+                                // [데스크탑 커서 해결 2] 쓸데없는 강제 focus() 꼼수를 빼서 화면 깜빡임과 브라우저 차단 현상을 고쳤습니다.
                                 aiMessageBox.innerHTML = marked.parse(assistantText);
                                 scrollToBottom();
-                                
-                                // 3. [해결] GPT 제안: 스트리밍 중에도 포커스 강제 유지
-                                if (document.activeElement !== input) input.focus();
                             }
                         } catch (e) {}
                     }
@@ -203,14 +236,14 @@
         }
     }
 
-    function appendMessageToUI(role, text, isRawHtml = false) {
+    function appendMessageToUI(role, text) {
         const chatFlow = document.getElementById('chatFlow');
         const row = document.createElement('div');
         row.className = `msg-row ${role}`;
         row.innerHTML = `
             <div class="msg-inner">
                 <div class="avatar ${role}">${role === 'assistant' ? '🤖' : '👤'}</div>
-                <div class="msg-text">${isRawHtml ? text : marked.parse(text)}</div>
+                <div class="msg-text">${role === 'user' ? text : marked.parse(text)}</div>
             </div>
         `;
         chatFlow.appendChild(row);
