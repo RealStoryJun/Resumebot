@@ -179,7 +179,7 @@ if st.session_state.messages[-1]["role"] == "user":
         try:
             # API 호출 (120b 모델 유지)
             response = client.chat.completions.create(
-                model="openai/gpt-oss-120b",
+                model="meta-llama/llama-4-scout-17b-16e-instruct",
                 messages=st.session_state.messages,
                 temperature=0.3,
                 stream=True
