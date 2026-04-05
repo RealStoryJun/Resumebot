@@ -22,9 +22,10 @@ st.markdown("""
 
     .stApp { background-color: #f9fafb; }
     
+    /* 하단 여백 10px로 압축 */
     .block-container {
         padding-top: 2.5rem !important;
-        padding-bottom: 120px !important; /* 하단 광고/입력창 안전 영역 */
+        padding-bottom: 10px !important; 
         max-width: 600px; 
     }
 
@@ -69,7 +70,7 @@ st.markdown("""
         background: #ffffff;
     }
     
-    /* 하단 입력창 고정 및 여백 */
+    /* 하단 입력창 고정 및 여백 (10px 적용) */
     [data-testid="stChatInput"] {
         padding-bottom: 10px !important; 
     }
@@ -158,13 +159,23 @@ if final_p:
     st.session_state.messages.append({"role": "user", "content": final_p})
     st.rerun()
 
-# AI 응답 생성 (120b 모델 및 스트리밍 로직)
+# AI 응답 생성 (120b 모델, 스트리밍, 대기 시간 로딩바, 스크롤 추적)
 if st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant", avatar="👨‍💻"):
+        
+        # 1. API 통신 전 대기(로딩) 상태 표시
+        loading_placeholder = st.empty()
+        loading_placeholder.markdown(
+            "<div style='text-align: center; color: #4b8bfc; font-size: 13px; font-weight: 500; padding: 15px; border-radius: 10px; background-color: #f0f8ff; margin-bottom: 10px;'>"
+            "⏳ AI가 지원자의 데이터를 분석하며 답변을 준비 중입니다...</div>", 
+            unsafe_allow_html=True
+        )
+        
+        # 메시지 및 생각(Think) 출력용 공간
         think_placeholder = st.empty()
         message_placeholder = st.empty()
         
-        # 모델을 openai/gpt-oss-120b로 변경
+        # API 호출 (스트리밍 시작 전까지 대략 1~3초 소요됨)
         response = client.chat.completions.create(
             model="openai/gpt-oss-120b",
             messages=st.session_state.messages,
@@ -175,21 +186,29 @@ if st.session_state.messages[-1]["role"] == "user":
         start_time = time.time()
         full_response = ""
         in_think_mode = False
+        first_chunk_received = False
         
         for chunk in response:
+            # 2. 첫 데이터 수신 시 최초 대기 로딩바 삭제
+            if not first_chunk_received:
+                loading_placeholder.empty()
+                first_chunk_received = True
+                
             token = chunk.choices[0].delta.content or ""
             full_response += token
             
+            # 3. 모델이 생각(<think>) 중일 때의 애니메이션
             if "<think>" in full_response and "</think>" not in full_response:
                 in_think_mode = True
                 elapsed = int(time.time() - start_time)
                 dots = "." * ((int(time.time() * 2) % 3) + 1)
                 think_placeholder.markdown(
                     f"<div style='color: #8b5cf6; font-size: 13px; font-weight: 500; background: #ede9fe; padding: 6px 12px; border-radius: 8px; display: inline-block;'>"
-                    f"🧠 AI가 데이터를 심층 분석 중입니다{dots} ({elapsed}초 경과)</div>", 
+                    f"🧠 추론 중입니다{dots} ({elapsed}초 경과)</div>", 
                     unsafe_allow_html=True
                 )
                 
+            # 4. 생각이 끝나고 실제 답변 타이핑 시작
             elif "</think>" in full_response:
                 if in_think_mode:
                     think_placeholder.empty()
@@ -208,9 +227,19 @@ if st.session_state.messages[-1]["role"] == "user":
         st.markdown(f'<a href="#q-{len(st.session_state.messages)-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": final_clean_text})
         
+        # 5. 자동 스크롤 추적 (향상된 JS)
         st.components.v1.html("""
             <script>
-                var body = window.parent.document.querySelector(".main");
-                body.scrollTop = body.scrollHeight;
+                const scrollToBottom = () => {
+                    const chatContainer = window.parent.document.querySelector('.main');
+                    if (chatContainer) {
+                        chatContainer.scrollTo({
+                            top: chatContainer.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    }
+                };
+                scrollToBottom();
+                setTimeout(scrollToBottom, 200); // 렌더링 지연 대비 0.2초 후 한 번 더 보정
             </script>
         """, height=0)
