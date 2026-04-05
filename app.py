@@ -33,13 +33,6 @@ st.markdown("""
         background: #f7f8fc;
     }
 
-    /* ── 메인 컨테이너 ── */
-    .block-container {
-        max-width: 720px !important;
-        padding: 0 1.5rem 7rem !important;
-        margin: 0 auto;
-    }
-
     /* ── 헤더 영역 ── */
     .app-header {
         text-align: center;
@@ -162,19 +155,7 @@ st.markdown("""
         background: #e8eaf6 !important;
     }
 
-    /* ── 채팅 입력창 ── */
-    .stChatInput {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        width: 100% !important;
-        max-width: 720px !important;
-        background: #f7f8fc !important;
-        padding: 12px 1.5rem 16px !important;
-        border-top: 1px solid #e8eaf0 !important;
-        z-index: 999 !important;
-    }
+    /* ── 채팅 입력창 내부 스타일 ── */
     .stChatInput > div {
         background: #ffffff !important;
         border: 1.5px solid #dde1ef !important;
@@ -235,12 +216,83 @@ st.markdown("""
         30% { transform: translateY(-6px); opacity: 1; }
     }
 
-    /* ── Streamlit 기본 요소 숨기기 ── */
-    #MainMenu, footer, header, [data-testid="stToolbar"] {
+    /* ── Streamlit 크롬 전부 숨기기 ── */
+    #MainMenu,
+    footer,
+    header,
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    [data-testid="manage-app-button"],
+    .stDeployButton,
+    .viewerBadge_container__1QSob,
+    [title="Manage app"],
+    [title="View app in Streamlit Community Cloud"],
+    iframe[title="streamlit_cloud_status_icon"],
+    .streamlit-footer {
+        display: none !important;
         visibility: hidden !important;
         height: 0 !important;
+        pointer-events: none !important;
     }
-    [data-testid="stDecoration"] { display: none !important; }
+
+    /* ── 채팅 입력창 - 모바일 safe-area 대응 ── */
+    .stChatInput {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 100% !important;
+        max-width: 720px !important;
+        background: #f7f8fc !important;
+        /* iOS Safari 하단 home indicator 여백 자동 확보 */
+        padding: 10px 1.5rem calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+        border-top: 1px solid #e8eaf0 !important;
+        z-index: 900 !important;
+    }
+
+    /* ── 플로팅 네비게이션 버튼 (좌측 고정) ── */
+    .float-nav {
+        position: fixed !important;
+        left: 14px !important;
+        bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 9px !important;
+        z-index: 9999 !important;
+    }
+    .fab {
+        width: 42px !important;
+        height: 42px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        background: #ffffff !important;
+        color: #3b5bdb !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.13), 0 0 0 1.5px #dde1ef !important;
+        font-size: 17px !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.18s ease !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+    .fab:hover, .fab:active {
+        transform: scale(1.12) !important;
+        box-shadow: 0 4px 16px rgba(59,91,219,0.22) !important;
+    }
+    .fab-ai {
+        background: linear-gradient(135deg, #3b5bdb, #7c3aed) !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 10px rgba(59,91,219,0.3) !important;
+    }
+
+    /* ── 본문 하단 여백 (입력창 + 브라우저 네비바 확보) ── */
+    .block-container {
+        max-width: 720px !important;
+        padding: 0 1.5rem calc(8rem + env(safe-area-inset-bottom, 0px)) !important;
+        margin: 0 auto;
+    }
 
     /* ── 컬럼 간격 ── */
     [data-testid="column"] {
@@ -250,11 +302,13 @@ st.markdown("""
     /* ── 로딩 스피너 숨기기 ── */
     .stSpinner { display: none !important; }
 
-    /* ── 반응형 ── */
+    /* ── 반응형 (모바일) ── */
     @media (max-width: 600px) {
-        .block-container { padding: 0 1rem 7rem !important; }
-        .stChatInput { padding: 10px 1rem 14px !important; }
-        div.stButton > button { font-size: 11.5px !important; padding: 5px 11px !important; }
+        .block-container { padding: 0 1rem calc(9rem + env(safe-area-inset-bottom, 0px)) !important; }
+        .stChatInput { padding: 8px 1rem calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
+        div.stButton > button { font-size: 11.5px !important; padding: 5px 10px !important; }
+        .float-nav { left: 10px !important; }
+        .fab { width: 38px !important; height: 38px !important; font-size: 15px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -295,6 +349,71 @@ st.markdown("""
     <p><span class="status-dot"></span>온라인 · 13년 경력 시니어 IT 리더</p>
 </div>
 """, unsafe_allow_html=True)
+
+# ==========================================
+# 5-1. 플로팅 네비게이션 버튼 (좌측 고정, HTML only - script는 component로)
+# ==========================================
+st.markdown("""
+<div class="float-nav" id="float-nav">
+    <button class="fab" id="fab-top" title="최상단으로">⬆</button>
+    <button class="fab fab-ai" id="fab-ai" title="마지막 AI 답변으로">🤖</button>
+    <button class="fab" id="fab-bottom" title="최하단으로">⬇</button>
+</div>
+""", unsafe_allow_html=True)
+
+# JS는 component iframe으로 주입 (window.parent로 부모 DOM 접근)
+st.components.v1.html("""
+<script>
+(function attachFAB() {
+    var pd = window.parent.document;
+
+    function getScroll() {
+        return pd.querySelector('[data-testid="stAppViewBlockContainer"]')
+            || pd.querySelector('[data-testid="stVerticalBlock"]')
+            || pd.querySelector('.main')
+            || pd.documentElement;
+    }
+
+    function goTop() {
+        var el = getScroll();
+        el.scrollTo({ top: 0, behavior: 'smooth' });
+        window.parent.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goBottom() {
+        var el = getScroll();
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+        window.parent.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    function goLastAI() {
+        var msgs = pd.querySelectorAll('[data-testid="stChatMessage"]');
+        var lastAI = null;
+        for (var i = 0; i < msgs.length; i++) {
+            if (msgs[i].querySelector('[data-testid="chatAvatarIcon-assistant"]')) {
+                lastAI = msgs[i];
+            }
+        }
+        if (lastAI) lastAI.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function tryBind() {
+        var top = pd.getElementById('fab-top');
+        var ai  = pd.getElementById('fab-ai');
+        var bot = pd.getElementById('fab-bottom');
+        if (!top || !ai || !bot) {
+            setTimeout(tryBind, 300);
+            return;
+        }
+        top.addEventListener('click', goTop);
+        ai.addEventListener('click', goLastAI);
+        bot.addEventListener('click', goBottom);
+    }
+
+    tryBind();
+})();
+</script>
+""", height=0)
 
 # ==========================================
 # 6. 퀵 질문 버튼 (버그 수정 완료)
