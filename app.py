@@ -15,7 +15,7 @@ st.markdown("""
     
     html, body, [class*="css"] {
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-        font-size: 14px !important;
+        font-size: 13.5px !important;
         color: #1f2937;
         scroll-behavior: smooth;
     }
@@ -54,10 +54,6 @@ st.markdown("""
         background-color: transparent !important;
         padding: 0.5rem 0 !important;
         border: none !important;
-    }
-    
-    [data-testid="stChatMessage"] .st-emotion-cache-16idsys p {
-        font-size: 1.5rem;
     }
 
     /* 질문으로 이동 링크 */
@@ -122,11 +118,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 quick_q = None
-if st.button("📄 증빙자료 링크"): quick_q = "이력서, 자기소개서, 포트폴리오 및 모든 증빙자료 링크를 표 형태로 깔끔하게 정리해 줘."
-if st.button("🚀 핵심 프로젝트"): quick_q = "10G 고도화 및 ERP 도입 등 주요 인프라 구축 성과를 요약해 줘."
-if st.button("💰 연봉·강점"): quick_q = "희망 연봉 수준과 13년 경력의 시니어로서 가지는 독보적인 강점이 뭐야?"
-if st.button("🛠️ 기술 스택"): quick_q = "주로 다루는 인프라, 보안, 그리고 AI 관련 기술 스택을 정리해 줘."
-if st.button("🏆 차별화 포인트"): quick_q = "단순한 엔지니어를 넘어 디자인과 AI를 융합하는 본인만의 차별화된 역량을 설명해 줘."
+if st.button("📄 증빙자료 링크"): 
+    quick_q = "resume.md 파일의 [4. 첨부파일 및 증빙자료 데이터베이스] 섹션을 참조하여 이력서, 자기소개서, 포트폴리오 및 모든 프로젝트 증빙자료 링크를 표 형태로 깔끔하게 출력해 줘."
+if st.button("🚀 핵심 프로젝트"): 
+    quick_q = "10G 고도화 및 ERP 도입 등 주요 인프라 구축 성과를 요약해 줘."
+if st.button("💰 연봉·강점"): 
+    quick_q = "희망 연봉 수준과 13년 경력의 시니어로서 가지는 독보적인 강점이 뭐야?"
+if st.button("🛠️ 기술 스택"): 
+    quick_q = "주로 다루는 인프라, 보안, 그리고 AI 관련 기술 스택을 정리해 줘."
+if st.button("🏆 차별화 포인트"): 
+    quick_q = "단순한 엔지니어를 넘어 디자인과 AI를 융합하는 본인만의 차별화된 역량을 설명해 줘."
 
 st.markdown("""
 <div style="display: flex; align-items: center; margin: 30px 0;">
@@ -157,16 +158,15 @@ if final_p:
     st.session_state.messages.append({"role": "user", "content": final_p})
     st.rerun()
 
-# AI 응답 생성 (스트리밍 및 실시간 타이머 로직)
+# AI 응답 생성 (120b 모델 및 스트리밍 로직)
 if st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant", avatar="👨‍💻"):
-        # UI 플레이스홀더(빈 공간) 미리 생성
         think_placeholder = st.empty()
         message_placeholder = st.empty()
         
-        # 스트리밍 모드 활성화 (stream=True)
+        # 모델을 openai/gpt-oss-120b로 변경
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model="openai/gpt-oss-120b",
             messages=st.session_state.messages,
             temperature=0.3,
             stream=True
@@ -180,47 +180,34 @@ if st.session_state.messages[-1]["role"] == "user":
             token = chunk.choices[0].delta.content or ""
             full_response += token
             
-            # AI가 <think> 태그 안에서 추론 중일 때
             if "<think>" in full_response and "</think>" not in full_response:
                 in_think_mode = True
                 elapsed = int(time.time() - start_time)
-                # 초 단위로 움직이는 애니메이션 점(...) 구현
                 dots = "." * ((int(time.time() * 2) % 3) + 1)
-                
-                # 실시간 로딩바 업데이트
                 think_placeholder.markdown(
                     f"<div style='color: #8b5cf6; font-size: 13px; font-weight: 500; background: #ede9fe; padding: 6px 12px; border-radius: 8px; display: inline-block;'>"
-                    f"🧠 AI가 이력서를 분석 중입니다{dots} ({elapsed}초 경과)</div>", 
+                    f"🧠 AI가 데이터를 심층 분석 중입니다{dots} ({elapsed}초 경과)</div>", 
                     unsafe_allow_html=True
                 )
                 
-            # 추론이 끝나고 실제 답변이 나올 때
             elif "</think>" in full_response:
                 if in_think_mode:
-                    think_placeholder.empty() # 로딩바 숨기기
+                    think_placeholder.empty()
                     in_think_mode = False
                 
-                # </think> 이후의 텍스트만 추출해서 실시간 타이핑 효과 출력
                 visible_text = full_response.split("</think>")[-1]
-                # 실시간으로 화면이 자동 스크롤(추적)됨
                 message_placeholder.markdown(visible_text.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
                 
             else:
-                # <think> 태그를 아예 사용하지 않는 모델의 경우
                 visible_text = full_response
                 message_placeholder.markdown(visible_text.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
         
-        # 스트리밍 완료 후 최종 출력 (커서 ▌ 제거)
         final_clean_text = full_response.split("</think>")[-1] if "</think>" in full_response else full_response
         message_placeholder.markdown(final_clean_text.replace("\n", "  \n"), unsafe_allow_html=True)
         
-        # 질문으로 이동 버튼 추가
         st.markdown(f'<a href="#q-{len(st.session_state.messages)-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
-        
-        # 세션에 최종 텍스트 저장
         st.session_state.messages.append({"role": "assistant", "content": final_clean_text})
         
-        # 완전 완료 후 스크롤을 맨 밑에 고정
         st.components.v1.html("""
             <script>
                 var body = window.parent.document.querySelector(".main");
