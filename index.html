@@ -3,145 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>최준영 AI 면접 비서</title>
+    <title>최준영 AI 비서</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
         :root {
-            --bg-main: #ffffff;
-            --bg-chat: #f9fafb;
-            --primary: #10a37f; /* ChatGPT Green */
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
+            --bg-color: #ffffff;
+            --chat-bg: #f7f7f8;
+            --primary: #10a37f;
+            --text-color: #374151;
+            --border-color: #d1d5db;
         }
-        
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { 
             margin: 0; padding: 0; height: 100%; 
-            font-family: 'Pretendard', sans-serif; background-color: var(--bg-main);
-            overflow: hidden; /* 전체 스크롤 방지, 내부 채팅창만 스크롤 */
+            font-family: 'Pretendard', sans-serif; background-color: var(--bg-color);
+            color: var(--text-color); overflow: hidden;
         }
 
-        .app-container {
-            display: flex; flex-direction: column; height: 100vh; max-width: 800px; margin: 0 auto;
-            border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+        /* 메인 레이아웃 */
+        .main-wrapper {
+            display: flex; flex-direction: column; height: 100vh;
+            max-width: 800px; margin: 0 auto; position: relative;
         }
 
-        /* 헤더 스타일 */
+        /* 헤더 */
         .header {
-            padding: 15px 20px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center; background: white;
+            padding: 15px 20px; border-bottom: 1px solid #ececf1;
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px);
+            display: flex; justify-content: space-between; align-items: center; z-index: 10;
         }
-        .header-info h1 { margin: 0; font-size: 16px; font-weight: 700; color: #111827; }
-        .header-info p { margin: 2px 0 0 0; font-size: 12px; color: var(--text-muted); }
-        .status-dot { color: #10b981; font-size: 10px; margin-right: 4px; }
+        .header h1 { margin: 0; font-size: 16px; font-weight: 700; }
+        .header .badge { font-size: 11px; background: #f0f0f0; padding: 2px 8px; border-radius: 10px; color: #666; }
 
-        /* 채팅 영역 */
-        .chat-container {
-            flex: 1; overflow-y: auto; padding: 0; background: var(--bg-main);
-            scroll-behavior: smooth;
+        /* 대화창 영역 */
+        .chat-view {
+            flex: 1; overflow-y: auto; padding: 0; scroll-behavior: smooth;
         }
-        
-        .welcome-section {
-            padding: 40px 20px; text-align: center; max-width: 500px; margin: 0 auto;
-        }
-        .welcome-section h2 { font-size: 24px; margin-bottom: 20px; color: #111827; }
 
-        /* 퀵 버튼 디자인 (ChatGPT Suggestion 스타일) */
-        .quick-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;
+        /* 상단 고정 질문 버튼 (ChatGPT 제안 스타일) */
+        .suggestion-area {
+            padding: 40px 20px 20px; text-align: center;
         }
-        .quick-card {
-            padding: 12px; border: 1px solid var(--border); border-radius: 12px;
-            text-align: left; cursor: pointer; transition: background 0.2s;
-            font-size: 13px; color: #374151; background: white;
+        .suggestion-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;
         }
-        .quick-card:hover { background-color: #f3f4f6; border-color: #d1d5db; }
+        .suggestion-item {
+            padding: 12px; border: 1px solid var(--border-color); border-radius: 12px;
+            font-size: 13px; cursor: pointer; transition: all 0.2s; background: white; text-align: left;
+        }
+        .suggestion-item:hover { background: #f7f7f8; border-color: #acacbe; }
 
-        /* 메시지 버블 스타일 */
-        .message-row { padding: 24px 20px; border-bottom: 1px solid #f3f4f6; }
-        .message-row.user { background-color: white; }
-        .message-row.assistant { background-color: var(--bg-chat); }
-        
-        .message-content {
-            max-width: 700px; margin: 0 auto; display: flex; gap: 16px;
+        /* 메시지 버블 */
+        .msg-row { padding: 25px 20px; border-bottom: 1px solid #f0f0f0; }
+        .msg-row.assistant { background-color: var(--chat-bg); }
+        .msg-inner { max-width: 700px; margin: 0 auto; display: flex; gap: 20px; }
+        .msg-avatar { 
+            width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; font-size: 18px; 
         }
-        .avatar {
-            width: 30px; height: 30px; border-radius: 4px; display: flex;
-            align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
-        }
-        .text-area { flex: 1; font-size: 15px; line-height: 1.65; color: #374151; }
-        .text-area p { margin: 0 0 10px 0; }
+        .msg-text { flex: 1; font-size: 15px; line-height: 1.6; word-break: break-word; }
         
-        /* 테이블 스타일 (ChatGPT 스타일) */
+        /* 테이블 스타일 */
         table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
-        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-        th { background: #f3f4f6; font-weight: 600; }
+        th, td { border: 1px solid var(--border-color); padding: 8px; text-align: left; }
+        th { background: #ececf1; }
 
-        /* 하단 입력창 (ChatGPT 스타일) */
-        .input-container {
-            padding: 20px; background: white; border-top: 1px solid var(--border);
+        /* 하단 고정 입력창 */
+        .bottom-nav {
+            padding: 20px; background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%);
         }
-        .input-box {
+        .input-group {
             max-width: 700px; margin: 0 auto; position: relative;
-            background: white; border: 1px solid var(--border); border-radius: 16px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: border-color 0.2s;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 12px; border: 1px solid rgba(0,0,0,0.1);
         }
-        .input-box:focus-within { border-color: #9ca3af; }
-        .input-box input {
-            width: 100%; padding: 14px 50px 14px 16px; border: none; outline: none;
-            font-size: 15px; border-radius: 16px; font-family: inherit;
+        .input-group input {
+            width: 100%; padding: 14px 50px 14px 16px; border: none; border-radius: 12px;
+            font-size: 15px; outline: none; font-family: inherit;
         }
         .send-btn {
-            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-            width: 32px; height: 32px; background-color: #000; color: white;
-            border: none; border-radius: 8px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; transition: opacity 0.2s;
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: var(--primary); color: white; border: none; width: 32px; height: 32px;
+            border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .send-btn:disabled { background: #acacbe; cursor: not-allowed; }
 
         .back-link {
-            font-size: 11px; color: var(--text-muted); cursor: pointer;
-            margin-top: 10px; display: inline-block; text-decoration: underline;
+            font-size: 11px; color: #acacbe; cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block;
         }
 
-        #loadingIndicator { display: none; margin-bottom: 10px; font-size: 13px; color: var(--primary); font-weight: 600; }
-
         @media (max-width: 600px) {
-            .quick-grid { grid-template-columns: 1fr; }
-            .app-container { border: none; }
+            .suggestion-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="main-wrapper">
     <div class="header">
-        <div class="header-info">
-            <h1>최준영 AI 면접 비서</h1>
-            <p><span class="status-dot">●</span> 13년 경력 IT 인프라·보안 전문가</p>
-        </div>
+        <h1>최준영 AI 비서</h1>
+        <div class="badge">13년 경력 시니어 IT 리더</div>
     </div>
 
-    <div class="chat-container" id="chatContainer">
-        <div class="welcome-section" id="welcomeSection">
-            <h2>무엇을 도와드릴까요?</h2>
-            <div class="quick-grid">
-                <div class="quick-card" onclick="handleQuickAction('btn1')">📄 <b>증빙자료</b><br>포트폴리오 및 링크 확인</div>
-                <div class="quick-card" onclick="handleQuickAction('btn2')">🚀 <b>핵심 프로젝트</b><br>10G 고도화 및 ERP 구축</div>
-                <div class="quick-card" onclick="handleQuickAction('btn3')">💰 <b>연봉 및 강점</b><br>처우 제안 및 해결사 역량</div>
-                <div class="quick-card" onclick="handleQuickAction('btn4')">🛠️ <b>기술 스택</b><br>인프라·보안·AI 스택</div>
-                <div class="quick-card" onclick="handleQuickAction('btn5')">🏆 <b>차별화 포인트</b><br>디자인 융합 전문가</div>
+    <div class="chat-view" id="chatView">
+        <div class="suggestion-area" id="initialScreen">
+            <h2 style="font-size: 22px; margin-bottom: 10px;">어떤 것이 궁금하신가요?</h2>
+            <p style="font-size: 14px; color: #666; margin-bottom: 25px;">면접관님을 위한 핵심 질문 리스트입니다.</p>
+            <div class="suggestion-grid">
+                <div class="suggestion-item" onclick="askQuick('btn1')">📄 <b>증빙자료 링크</b><br>포트폴리오 및 각종 문서 확인</div>
+                <div class="suggestion-item" onclick="askQuick('btn2')">🚀 <b>주요 성과</b><br>10G 고도화 및 ERP 도입 성과</div>
+                <div class="suggestion-item" onclick="askQuick('btn3')">💰 <b>연봉 및 강점</b><br>처우 제안 및 해결사 역량</div>
+                <div class="suggestion-item" onclick="askQuick('btn4')">🛠️ <b>기술 스택</b><br>보안·인프라·AI 핵심 기술</div>
+                <div class="suggestion-item" onclick="askQuick('btn5')">🏆 <b>차별화 역량</b><br>디자인과 AI를 융합하는 능력</div>
             </div>
         </div>
-        <div id="messageFlow"></div>
-        <div id="loadingIndicator" style="padding-left: 66px;">AI가 답변을 생성 중입니다...</div>
+
+        <div id="chatFlow">
+            <div class="msg-row assistant">
+                <div class="msg-inner">
+                    <div class="msg-avatar" style="background: var(--primary); color: white;">🤖</div>
+                    <div class="msg-text">안녕하세요! 최준영 지원자의 AI 면접 비서입니다. 무엇이든 물어보세요.</div>
+                </div>
+            </div>
+        </div>
+        <div id="streamLoading" style="padding: 20px 70px; display: none; font-size: 13px; color: var(--primary);">답변을 생성 중입니다...</div>
     </div>
 
-    <div class="input-container">
-        <form onsubmit="handleChatSubmit(event)" class="input-box">
-            <input type="text" id="userInput" placeholder="메시지를 입력하세요..." autocomplete="off">
-            <button type="submit" id="sendBtn" class="send-btn">↑</button>
+    <div class="bottom-nav">
+        <form class="input-group" onsubmit="handleUserSubmit(event)">
+            <input type="text" id="queryInput" placeholder="질문을 입력하세요..." autocomplete="off">
+            <button type="submit" class="send-btn" id="sendBtn">↑</button>
         </form>
     </div>
 </div>
@@ -149,133 +140,121 @@
 <script>
     const WORKER_URL = "https://resumebot.god8night.workers.dev";
     let systemPrompt = "";
-    let chatHistory = [];
-    
-    // 📂 [app.py 로직 포팅] resume.md 파일 동적 로드
-    async function loadResume() {
+    let messages = [];
+
+    // 📂 1. [app.py 기능 이식] resume.md 파일 로드
+    async function initSystem() {
         try {
             const res = await fetch('resume.md');
-            const data = await res.text();
-            systemPrompt = `너는 13년차 IT 인프라/보안 전문가 최준영을 대변하는 AI 비서야.
-아래 제공된 이력서를 기반으로 자신감 있고 전문적으로 답변해.
+            const resumeContent = await res.text();
+            systemPrompt = `너는 13년차 시니어 IT 리더 최준영을 대변하는 AI 비서야.
+아래 이력서 데이터를 완벽히 숙지하고 질문에 답변해.
 
---- 이력서 데이터 ---
-${data}
-------------------`;
-            console.log("Resume Loaded");
-        } catch (e) {
-            systemPrompt = "너는 IT 전문가 최준영의 비서야.";
-        }
+--- 이력서 ---
+${resumeContent}
+-----------`;
+            console.log("System Prompt Loaded.");
+        } catch (e) { console.error("Data Load Error"); }
     }
-    loadResume();
+    initSystem();
 
-    const hardcoded = {
-        "btn1": { q: "이력서, 포트폴리오 등 증빙자료 링크를 표 형태로 정리해줘.", a: "최준영 지원자의 핵심 증빙자료입니다.\n\n| 항목 | 링크 |\n|---|---|\n| 웹 이력서 | [바로가기](https://realstoryjun.dothome.co.kr/resume) |\n| PDF 이력서 | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/resume.pdf) |\n| 포트폴리오 | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Portfolio.pdf) |\n| 프로젝트(바리가자) | [접속하기](https://www.barigaja.co.kr/) |" },
-        "btn2": { q: "주요 인프라 구축 성과를 요약해줘.", a: "핵심 성과는 다음과 같습니다.\n\n1. **10G 네트워크 고도화**: Cisco L3 기반 VLAN 최적화 및 SFP+ 광랜 구축\n2. **SEMES 보안 평가**: 53개 항목 82.78점 획득으로 보안 규정 준수 입증\n3. **ERP 도입 PM**: 영림원 ERP 전사 도입 및 그룹웨어 연동 총괄" },
-        "btn3": { q: "희망 연봉과 본인만의 강점은?", a: "희망 연봉은 7,000~8,000만 원 선입니다.\n\n나의 강점은 **'토크 컨버터'**입니다. 복잡한 인프라 트래픽 로그를 시각화하여 비전문 경영진의 의사결정을 지원하는 능력이 탁월합니다." },
-        "btn4": { q: "기술 스택을 알려줘.", a: "네트워크(Cisco, VLAN), 보안(UTM, WAF, IPS), 클라우드(Cloudflare, Serverless), AI(Llama, Qwen RAG 구축) 등 풀스택 인프라 기술을 보유하고 있습니다." },
-        "btn5": { q: "다른 엔지니어와의 차별점은?", a: "단순 서버 관리를 넘어 디자인(After Effects)과 AI 개발 능력을 융합한 **'1인 에이전시급 솔루션'** 제공이 가능하다는 점입니다." }
+    const quickData = {
+        "btn1": { q: "증빙자료 링크를 정리해줘.", a: "최준영 지원자의 주요 증빙 자료입니다.\n\n| 구분 | 링크 |\n|---|---|\n| 웹 이력서 | [접속](https://realstoryjun.dothome.co.kr/resume) |\n| PDF 이력서 | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/resume.pdf) |\n| 포트폴리오 | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Portfolio.pdf) |" },
+        "btn2": { q: "주요 인프라 구축 성과가 뭐야?", a: "핵심 성과는 다음과 같습니다.\n\n1. **10G 네트워크 고도화**: SFP+ 광네트워크 및 Cisco L3 최적화\n2. **ERP 도입 총괄**: 전사 영림원 ERP 및 그룹웨어 연동 PM 수행" },
+        "btn3": { q: "연봉 수준과 본인의 강점은?", a: "희망 연봉은 7,000~8,000만 원 선입니다. 강점은 복잡한 IT 데이터를 시각화하여 소통하는 **'토크 컨버터'** 역량입니다." },
+        "btn4": { q: "기술 스택 요약해줘.", a: "L3/L4 스위치, VLAN, 보안 방화벽(UTM), Cloudflare, 로컬 LLM(RAG) 구축 및 Python 자동화 기술을 보유하고 있습니다." },
+        "btn5": { q: "본인만의 차별점은?", a: "단순 엔지니어를 넘어 영상 디자인과 AI를 융합하여 비즈니스 가치를 시각적으로 창출하는 **'멀티 플레이어'**라는 점입니다." }
     };
 
     function scrollChat() {
-        const container = document.getElementById('chatContainer');
-        container.scrollTop = container.scrollHeight;
+        const view = document.getElementById('chatView');
+        view.scrollTop = view.scrollHeight;
     }
 
-    function appendMessage(role, content, id = null) {
-        document.getElementById('welcomeSection').style.display = 'none';
-        const flow = document.getElementById('messageFlow');
+    function appendBubble(role, content, index = null) {
+        document.getElementById('initialScreen').style.display = 'none';
+        const flow = document.getElementById('chatFlow');
         const row = document.createElement('div');
-        row.className = `message-row ${role}`;
-        if(id) row.id = `msg-${id}`;
+        row.className = `msg-row ${role}`;
+        if(index) row.id = `idx-${index}`;
 
-        const inner = document.createElement('div');
-        inner.className = 'message-content';
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'avatar';
-        avatar.innerText = role === 'user' ? '👤' : '🤖';
-        avatar.style.background = role === 'user' ? '#f3f4f6' : 'var(--primary)';
-        avatar.style.color = role === 'user' ? '#000' : '#fff';
+        row.innerHTML = `
+            <div class="msg-inner">
+                <div class="msg-avatar" style="background: ${role==='user'?'#f0f0f0':'var(--primary)'}; color: ${role==='user'?'#000':'#fff'}">
+                    ${role==='user'?'👤':'🤖'}
+                </div>
+                <div class="msg-text">${content.replace(/\n/g, '<br>')}</div>
+            </div>
+        `;
 
-        const text = document.createElement('div');
-        text.className = 'text-area';
-        text.innerHTML = content.replace(/\n/g, '<br>');
-
-        inner.appendChild(avatar);
-        inner.appendChild(text);
-        row.appendChild(inner);
-        
-        if (role === 'assistant' && id > 0) {
+        if(role === 'assistant' && index > 0) {
             const up = document.createElement('div');
             up.className = 'back-link';
             up.innerText = '↑ 질문 위치로 이동';
-            up.onclick = () => document.getElementById(`msg-${id}`).scrollIntoView({behavior: 'smooth', block: 'start'});
-            text.appendChild(up);
+            up.onclick = () => document.getElementById(`idx-${index}`).scrollIntoView({behavior: 'smooth', block: 'start'});
+            row.querySelector('.msg-text').appendChild(up);
         }
-        
+
         flow.appendChild(row);
         scrollChat();
-        return text;
+        return row.querySelector('.msg-text');
     }
 
-    // 🤖 [거짓 API 로직] 가짜 스트리밍으로 AI인 척 연기
-    async function fakeStream(answer, element) {
+    // 🤖 2. [가짜 스트리밍] 버튼 클릭 시 AI처럼 연기
+    async function runFakeAi(answer, el) {
         let current = "";
-        const words = answer.split('');
-        for (let char of words) {
+        for (let char of answer.split('')) {
             current += char;
-            element.innerHTML = current.replace(/\n/g, '<br>') + ' ▌';
+            el.innerHTML = current.replace(/\n/g, '<br>') + " ▌";
             scrollChat();
             await new Promise(r => setTimeout(r, 15));
         }
-        element.innerHTML = answer.replace(/\n/g, '<br>');
+        el.innerHTML = answer.replace(/\n/g, '<br>');
     }
 
-    async function handleQuickAction(key) {
-        const item = hardcoded[key];
-        const userIdx = chatHistory.length + 1;
-        appendMessage('user', item.q, userIdx);
-        chatHistory.push({ role: "user", content: item.q });
+    async function askQuick(id) {
+        const data = quickData[id];
+        const idx = messages.length + 1;
+        appendBubble('user', data.q, idx);
+        messages.push({role: "user", content: data.q});
 
-        const aiTextEl = appendMessage('assistant', '');
-        await fakeStream(item.a, aiTextEl);
-        chatHistory.push({ role: "assistant", content: item.a });
+        const aiEl = appendBubble('assistant', '');
+        await runFakeAi(data.a, aiEl);
+        messages.push({role: "assistant", content: data.a});
     }
 
-    async function handleChatSubmit(e) {
+    async function handleUserSubmit(e) {
         e.preventDefault();
-        const input = document.getElementById('userInput');
+        const input = document.getElementById('queryInput');
         const text = input.value.trim();
         if(!text || !systemPrompt) return;
 
         input.value = '';
-        const userIdx = chatHistory.length + 1;
-        appendMessage('user', text, userIdx);
+        const idx = messages.length + 1;
+        appendBubble('user', text, idx);
         
-        if(chatHistory.length === 0) chatHistory.push({role:"system", content: systemPrompt});
-        chatHistory.push({role:"user", content: text});
+        if(messages.length === 0) messages.push({role: "system", content: systemPrompt});
+        messages.push({role: "user", content: text});
 
-        const aiTextEl = appendMessage('assistant', '');
-        document.getElementById('loadingIndicator').style.display = 'block';
+        const aiEl = appendBubble('assistant', '');
+        document.getElementById('streamLoading').style.display = 'block';
         scrollChat();
 
         try {
             const res = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: chatHistory })
+                body: JSON.stringify({ messages: messages })
             });
 
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
             let full = "";
-            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('streamLoading').style.display = 'none';
 
             while(true) {
                 const { done, value } = await reader.read();
                 if(done) break;
-                
                 const chunk = decoder.decode(value);
                 const lines = chunk.split('\n');
                 for(let line of lines) {
@@ -286,17 +265,15 @@ ${data}
                             const parsed = JSON.parse(dataStr);
                             const content = parsed.choices[0].delta.content || "";
                             full += content;
-                            aiTextEl.innerHTML = full.replace(/\n/g, '<br>') + ' ▌';
+                            aiEl.innerHTML = full.replace(/\n/g, '<br>') + " ▌";
                             scrollChat();
                         } catch(e) {}
                     }
                 }
             }
-            aiTextEl.innerHTML = full.replace(/\n/g, '<br>');
-            chatHistory.push({role:"assistant", content: full});
-        } catch (err) {
-            aiTextEl.innerText = "서버 연결에 실패했습니다. 다시 시도해주세요.";
-        }
+            aiEl.innerHTML = full.replace(/\n/g, '<br>');
+            messages.push({role: "assistant", content: full});
+        } catch(e) { aiEl.innerText = "연결 에러가 발생했습니다."; }
     }
 </script>
 </body>
