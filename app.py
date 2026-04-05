@@ -82,13 +82,15 @@ st.markdown("""
         color: #3b5bdb !important;
         border: 1.5px solid #d0d9ff !important;
         border-radius: 999px !important;
-        padding: 6px 14px !important;
+        padding: 6px 10px !important;
         height: auto !important;
         line-height: 1.4 !important;
         transition: all 0.18s ease !important;
         box-shadow: 0 1px 3px rgba(59, 91, 219, 0.08) !important;
         white-space: nowrap !important;
         cursor: pointer !important;
+        width: 100% !important;        /* 컨테이너 가득 채우기 */
+        margin-bottom: 6px !important; /* 행 간격 */
     }
     div.stButton > button:hover {
         background: #3b5bdb !important;
@@ -290,13 +292,23 @@ st.markdown("""
     /* ── 본문 하단 여백 (입력창 + 브라우저 네비바 확보) ── */
     .block-container {
         max-width: 720px !important;
-        padding: 0 1.5rem calc(8rem + env(safe-area-inset-bottom, 0px)) !important;
+        /* 12rem = ~168px: 입력창 70px + 브라우저바 49px + 여유분 */
+        padding: 0 1.5rem calc(12rem + env(safe-area-inset-bottom, 0px)) !important;
         margin: 0 auto;
     }
 
-    /* ── 컬럼 간격 ── */
+    /* ── 컬럼 간격 최소화 (버튼 그리드) ── */
     [data-testid="column"] {
-        padding: 0 4px !important;
+        padding: 0 3px !important;
+        min-width: 0 !important;   /* 모바일 찌그러짐 방지 */
+    }
+
+    /* ── 버튼 텍스트 말줄임 방지 ── */
+    div.stButton > button span {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
     }
 
     /* ── 로딩 스피너 숨기기 ── */
@@ -304,11 +316,19 @@ st.markdown("""
 
     /* ── 반응형 (모바일) ── */
     @media (max-width: 600px) {
-        .block-container { padding: 0 1rem calc(9rem + env(safe-area-inset-bottom, 0px)) !important; }
-        .stChatInput { padding: 8px 1rem calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
-        div.stButton > button { font-size: 11.5px !important; padding: 5px 10px !important; }
-        .float-nav { left: 10px !important; }
-        .fab { width: 38px !important; height: 38px !important; font-size: 15px !important; }
+        .block-container {
+            padding: 0 0.8rem calc(13rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+        .stChatInput {
+            padding: 8px 0.8rem calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+        }
+        div.stButton > button {
+            font-size: 11px !important;
+            padding: 5px 6px !important;
+            letter-spacing: -0.2px !important;
+        }
+        .float-nav { left: 8px !important; }
+        .fab { width: 36px !important; height: 36px !important; font-size: 14px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -418,18 +438,28 @@ st.components.v1.html("""
 # ==========================================
 # 6. 퀵 질문 버튼 (버그 수정 완료)
 # ==========================================
-QUICK_QUESTIONS = {
-    "📄 증빙자료 링크": "이력서, 자기소개서, 포트폴리오 및 모든 증빙자료 링크를 표 형태로 깔끔하게 정리해 줘.",
-    "🚀 핵심 프로젝트": "10G 고도화 및 ERP 도입 등 주요 인프라 구축 성과를 요약해 줘.",
-    "💰 연봉·강점": "희망 연봉 수준과 13년 경력의 시니어로서 가지는 독보적인 강점이 뭐야?",
-    "🛠️ 기술 스택": "보유한 기술 스택과 자격증을 상세히 알려줘.",
-    "🏆 차별화 포인트": "다른 지원자 대비 최준영만의 차별화된 경쟁력을 설명해 줘.",
-}
+QUICK_QUESTIONS = [
+    ("📄 증빙자료",   "이력서, 자기소개서, 포트폴리오 및 모든 증빙자료 링크를 표 형태로 깔끔하게 정리해 줘."),
+    ("🚀 프로젝트",   "10G 고도화 및 ERP 도입 등 주요 인프라 구축 성과를 요약해 줘."),
+    ("💰 연봉·강점",  "희망 연봉 수준과 13년 경력의 시니어로서 가지는 독보적인 강점이 뭐야?"),
+    ("🛠️ 기술스택",  "보유한 기술 스택과 자격증을 상세히 알려줘."),
+    ("🏆 차별화",     "다른 지원자 대비 최준영만의 차별화된 경쟁력을 설명해 줘."),
+]
 
-cols = st.columns(len(QUICK_QUESTIONS))
 quick_q = None
-for col, (label, question) in zip(cols, QUICK_QUESTIONS.items()):
-    if col.button(label, use_container_width=False):
+
+# 1행: 3개
+row1 = st.columns(3)
+for i, col in enumerate(row1):
+    label, question = QUICK_QUESTIONS[i]
+    if col.button(label, use_container_width=True, key=f"qb_{i}"):
+        quick_q = question
+
+# 2행: 2개 (중앙 정렬용 padding 컬럼 포함)
+_, c1, c2, _ = st.columns([0.5, 2, 2, 0.5])
+for i, col in enumerate([c1, c2]):
+    label, question = QUICK_QUESTIONS[3 + i]
+    if col.button(label, use_container_width=True, key=f"qb_{3 + i}"):
         quick_q = question
 
 # ==========================================
