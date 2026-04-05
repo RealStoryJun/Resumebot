@@ -24,8 +24,9 @@ st.markdown("""
     
     .block-container {
         padding-top: 2.5rem !important;
-        padding-bottom: 10px !important; 
-        max-width: 600px; 
+        /* 하단 여백: 채팅 입력창 + 브라우저 네비바 완전 회피 */
+        padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+        max-width: 600px;
     }
 
     div.stButton { margin-bottom: -5px; }
@@ -37,7 +38,7 @@ st.markdown("""
         font-weight: 500 !important;
         font-size: 13.5px !important;
         padding: 0.35rem 1rem !important;
-        width: fit-content !important; 
+        width: fit-content !important;
         box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
         transition: all 0.2s;
     }
@@ -53,6 +54,7 @@ st.markdown("""
         border: none !important;
     }
 
+    /* 질문 위치로 이동 버튼 - 클릭 가능한 스타일 */
     .back-link {
         font-size: 12px;
         color: #6b7280;
@@ -63,17 +65,154 @@ st.markdown("""
         border-radius: 15px;
         border: 1px solid #d1d5db;
         background: #ffffff;
+        cursor: pointer;
+    }
+    .back-link:hover {
+        background: #f3f4f6;
+        color: #374151;
     }
     
+    /* 채팅 입력창 고정 */
     [data-testid="stChatInput"] {
-        padding-bottom: 10px !important; 
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 100% !important;
+        max-width: 600px !important;
+        background: #f9fafb !important;
+        padding: 10px 1rem calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+        border-top: 1px solid #e5e7eb !important;
+        z-index: 999 !important;
     }
 
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    [data-testid="stDecoration"] { display: none !important; }
+    [data-testid="manage-app-button"] { display: none !important; }
+    .stDeployButton { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
+
+# ==========================================
+# ★ 핵심: 스크롤 제어 JS (페이지 최상단에서 1회 주입)
+#
+# Streamlit 구조:
+#   window (iframe)
+#     └─ window.parent (실제 앱)
+#          └─ section.main  ← 실제 스크롤 컨테이너
+#               └─ .block-container (콘텐츠)
+#
+# href="#id" 방식은 iframe URL을 바꾸려 해서 실패.
+# → 클릭 이벤트를 가로채서 window.parent.document 안의
+#   target element를 직접 scrollIntoView() 해야 함.
+# ==========================================
+st.components.v1.html("""
+<script>
+(function() {
+    var pd = window.parent.document;
+
+    /* ─── 실제 스크롤 컨테이너 탐색 ─── */
+    function getScrollEl() {
+        // Streamlit 1.x ~ 최신: section.main 이 스크롤 컨테이너
+        return pd.querySelector('section[data-testid="stAppViewContainer"] > .main')
+            || pd.querySelector('section.main')
+            || pd.querySelector('.main')
+            || pd.documentElement;
+    }
+
+    /* ─── 맨 아래로 스크롤 ─── */
+    function scrollBottom() {
+        var el = getScrollEl();
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
+
+    /* ─── 특정 id 위치로 스크롤 ─── */
+    function scrollToId(id) {
+        var target = pd.getElementById(id);
+        if (!target) return;
+        /* scrollIntoView는 target의 부모 스크롤 박스 기준 */
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        /* 혹시 고정 헤더가 있으면 약간 위로 보정 */
+        setTimeout(function() {
+            var el = getScrollEl();
+            el.scrollTop = Math.max(0, el.scrollTop - 60);
+        }, 350);
+    }
+
+    /* ─── back-link 클릭 핸들러 바인딩 ─── */
+    function bindBackLinks() {
+        pd.querySelectorAll('a.back-link[data-target]').forEach(function(a) {
+            if (a._bound) return;
+            a._bound = true;
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                scrollToId(this.dataset.target);
+            });
+        });
+    }
+
+    /* ─── 스트리밍 중 자동 하단 추적 ─── */
+    var autoScroll = true;   // 사용자가 위로 올리면 false
+    var lastScrollTop = 0;
+    var ticking = false;
+
+    function onUserScroll() {
+        if (!ticking) {
+            window.parent.requestAnimationFrame(function() {
+                var el = getScrollEl();
+                // 사용자가 위로 스크롤하면 자동 추적 OFF
+                if (el.scrollTop < lastScrollTop - 10) {
+                    autoScroll = false;
+                }
+                // 맨 아래 근처면 자동 추적 ON
+                if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) {
+                    autoScroll = true;
+                }
+                lastScrollTop = el.scrollTop;
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }
+
+    /* ─── MutationObserver: DOM 변경 감지 → 링크 바인딩 + 자동 스크롤 ─── */
+    var observer = new MutationObserver(function() {
+        bindBackLinks();
+        if (autoScroll) {
+            scrollBottom();
+        }
+    });
+
+    /* ─── 초기화 (DOM 준비될 때까지 재시도) ─── */
+    function init() {
+        var el = getScrollEl();
+        if (!el || el === pd.documentElement) {
+            // section.main 아직 없음 → 재시도
+            setTimeout(init, 200);
+            return;
+        }
+        // 스크롤 이벤트 감지
+        el.addEventListener('scroll', onUserScroll, { passive: true });
+        // DOM 변경 감지 시작
+        observer.observe(pd.body, { childList: true, subtree: true, characterData: true });
+        // 첫 바인딩
+        bindBackLinks();
+        // 처음 로딩 시 맨 아래로
+        scrollBottom();
+    }
+
+    // iframe 로드 완료 후 실행
+    if (pd.readyState === 'complete') {
+        init();
+    } else {
+        pd.addEventListener('DOMContentLoaded', init);
+        setTimeout(init, 500); // 보험
+    }
+})();
+</script>
+""", height=0)
 
 # ==========================================
 # 2. 데이터 로드 및 초기 설정
@@ -100,7 +239,7 @@ if "pending_hardcoded" not in st.session_state:
     st.session_state.pending_hardcoded = None
 
 # ==========================================
-# 3. 사전 정의된 답변(캐싱 데이터)
+# 3. 사전 정의된 답변
 # ==========================================
 hardcoded_responses = {
     "btn1": {
@@ -126,7 +265,7 @@ hardcoded_responses = {
 }
 
 # ==========================================
-# 4. 헤더 및 퀵 메뉴 구성
+# 4. 헤더 및 퀵 메뉴
 # ==========================================
 st.markdown("""
 <div style="text-align: center; margin-bottom: 20px;">
@@ -145,8 +284,8 @@ def handle_quick_question(btn_key):
 
 if st.button("📄 증빙자료 링크"): handle_quick_question("btn1")
 if st.button("🚀 핵심 프로젝트"): handle_quick_question("btn2")
-if st.button("💰 연봉·강점"): handle_quick_question("btn3")
-if st.button("🛠️ 기술 스택"): handle_quick_question("btn4")
+if st.button("💰 연봉·강점"):    handle_quick_question("btn3")
+if st.button("🛠️ 기술 스택"):    handle_quick_question("btn4")
 if st.button("🏆 차별화 포인트"): handle_quick_question("btn5")
 
 st.markdown("""
@@ -159,108 +298,120 @@ st.markdown("""
 
 # ==========================================
 # 5. 채팅 내역 렌더링
+#
+# ★ 앵커 수정 핵심:
+#   - href="#..." 대신 data-target="q-{i}" 속성 사용
+#   - JS가 data-target을 읽어 scrollIntoView() 실행
+#   - id="q-{i}"는 user 메시지 div에 부여
 # ==========================================
 for i, msg in enumerate(st.session_state.messages):
-    if msg["role"] == "system": continue
+    if msg["role"] == "system":
+        continue
+
     avatar_emoji = "👤" if msg["role"] == "user" else "🤖"
-    
+
     with st.chat_message(msg["role"], avatar=avatar_emoji):
         if msg["role"] == "user":
-            st.markdown(f'<div id="q-{i}"></div>', unsafe_allow_html=True)
+            # ★ 실제 DOM에 id 부여 → JS가 이걸 찾아 scrollIntoView
+            st.markdown(f'<div id="q-{i}" style="margin:0;padding:0;"></div>', unsafe_allow_html=True)
+
         content = msg["content"].replace("\n", "  \n")
         st.markdown(content, unsafe_allow_html=True)
-        if msg["role"] == "assistant" and i > 1:
-            st.markdown(f'<a href="#q-{i-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
 
+        if msg["role"] == "assistant" and i > 1:
+            # ★ href 대신 data-target 사용 → JS가 클릭 가로채서 scroll
+            st.markdown(
+                f'<a class="back-link" data-target="q-{i-1}" href="#">↑ 질문 위치로 이동</a>',
+                unsafe_allow_html=True
+            )
+
+# ==========================================
+# 6. 입력 처리
+# ==========================================
 if prompt := st.chat_input("궁금한 점을 직접 질문하세요"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.session_state.pending_hardcoded = None 
+    st.session_state.pending_hardcoded = None
     st.rerun()
 
 # ==========================================
-# 6. 실시간 강제 스크롤 옵저버 (가장 핵심 포인트!)
-# ==========================================
-# AI가 답변을 출력하기 직전에 옵저버를 미리 깔아둬서, 글자가 하나씩 찍힐 때마다 무조건 화면을 내립니다.
-st.components.v1.html("""
-    <script>
-        const doc = window.parent.document;
-        const chatContainer = doc.querySelector('.main');
-        if (chatContainer) {
-            // 일단 현재 위치에서 맨 밑으로 즉시 이동
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // 글자가 화면에 추가되는 것을 감지하는 옵저버 설정
-            const observer = new MutationObserver(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            });
-            observer.observe(chatContainer, { childList: true, subtree: true });
-        }
-    </script>
-""", height=0)
-
-# ==========================================
-# 7. 통합 AI 응답 생성
+# 7. AI 응답 생성
 # ==========================================
 if st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant", avatar="🤖"):
-        
+
         message_placeholder = st.empty()
-        
-        # 📌 케이스 A: 버튼 클릭 시 (가짜 스트리밍)
+
+        # ── 케이스 A: 퀵 버튼 (가짜 스트리밍) ──
         if st.session_state.pending_hardcoded:
             full_response = ""
             target_text = st.session_state.pending_hardcoded
-            
-            chunk_size = 3
-            for i in range(0, len(target_text), chunk_size):
-                full_response += target_text[i:i+chunk_size]
-                message_placeholder.markdown(full_response.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
+
+            for i in range(0, len(target_text), 3):
+                full_response += target_text[i:i+3]
+                message_placeholder.markdown(
+                    full_response.replace("\n", "  \n") + " ▌",
+                    unsafe_allow_html=True
+                )
                 time.sleep(0.01)
-                
-            message_placeholder.markdown(full_response.replace("\n", "  \n"), unsafe_allow_html=True)
+
+            message_placeholder.markdown(
+                full_response.replace("\n", "  \n"),
+                unsafe_allow_html=True
+            )
             st.session_state.messages.append({"role": "assistant", "content": full_response})
-            st.session_state.pending_hardcoded = None 
-            
-        # 📌 케이스 B: 직접 타자 시 (Llama-4-scout-17b 진짜 스트리밍)
+            st.session_state.pending_hardcoded = None
+
+        # ── 케이스 B: 직접 입력 (진짜 스트리밍) ──
         else:
             loading_placeholder = st.empty()
             loading_placeholder.markdown(
-                "<div style='text-align: center; color: #4b8bfc; font-size: 13px; font-weight: 500; padding: 15px; border-radius: 10px; background-color: #f0f8ff; margin-bottom: 10px;'>"
-                "⏳ AI가 데이터를 심층 분석 중입니다...</div>", 
+                "<div style='text-align:center;color:#4b8bfc;font-size:13px;"
+                "font-weight:500;padding:15px;border-radius:10px;"
+                "background:#f0f8ff;margin-bottom:10px;'>"
+                "⏳ AI가 데이터를 심층 분석 중입니다...</div>",
                 unsafe_allow_html=True
             )
             try:
-                # 확정된 안정성/속도 최강 모델 적용
                 response = client.chat.completions.create(
                     model="meta-llama/llama-4-scout-17b-16e-instruct",
                     messages=st.session_state.messages,
                     temperature=0.3,
                     stream=True
                 )
-                
+
                 full_response = ""
-                first_chunk_received = False
-                
+                first_chunk = False
+
                 for chunk in response:
-                    if not first_chunk_received:
+                    if not first_chunk:
                         loading_placeholder.empty()
-                        first_chunk_received = True
-                        
+                        first_chunk = True
                     token = chunk.choices[0].delta.content or ""
                     full_response += token
-                    message_placeholder.markdown(full_response.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
-                
-                message_placeholder.markdown(full_response.replace("\n", "  \n"), unsafe_allow_html=True)
+                    message_placeholder.markdown(
+                        full_response.replace("\n", "  \n") + " ▌",
+                        unsafe_allow_html=True
+                    )
+
+                message_placeholder.markdown(
+                    full_response.replace("\n", "  \n"),
+                    unsafe_allow_html=True
+                )
                 st.session_state.messages.append({"role": "assistant", "content": full_response})
 
             except groq.RateLimitError:
                 loading_placeholder.empty()
-                st.warning("🚦 **서버 요청 제한 안내**\n\n현재 대기열이 많습니다. 잠시 후 다시 시도해 주세요.")
-                st.session_state.messages.pop() 
-                
+                st.warning("🚦 **서버 요청 제한**\n\n잠시 후 다시 시도해 주세요.")
+                st.session_state.messages.pop()
+
             except Exception as e:
                 loading_placeholder.empty()
-                st.error("알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
+                st.error("오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
                 st.session_state.messages.pop()
-        
-        st.markdown(f'<a href="#q-{len(st.session_state.messages)-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
+
+        # 마지막 답변 아래 '질문 위치로 이동' 링크
+        last_q_idx = len(st.session_state.messages) - 2  # assistant 바로 직전 user 인덱스
+        st.markdown(
+            f'<a class="back-link" data-target="q-{last_q_idx}" href="#">↑ 질문 위치로 이동</a>',
+            unsafe_allow_html=True
+        )
