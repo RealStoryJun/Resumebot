@@ -152,7 +152,7 @@ if final_p:
 if st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant", avatar="👨‍💻"):
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model="openai/gpt-oss-120b",
             messages=st.session_state.messages,
             temperature=0.3
         )
