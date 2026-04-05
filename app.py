@@ -4,38 +4,66 @@ import os
 import re
 
 # ==========================================
-# 1. 페이지 기본 설정 & 디자인 커스텀 (CSS)
+# 1. 페이지 설정 & 컴팩트 UI 디자인 (60-70% 스케일)
 # ==========================================
 st.set_page_config(page_title="최준영 AI 비서", page_icon="👨‍💻", layout="centered")
 
-# 스트림릿 기본 UI 숨기기 및 세련된 버튼 스타일 적용
+# CSS를 통한 상세 UI 제어
 st.markdown("""
 <style>
+    /* 전체 폰트 및 밀도 압축 (약 65% 수준) */
+    html, body, [class*="css"] {
+        font-size: 13px !important;
+        scroll-behavior: smooth; /* 부드러운 스크롤 */
+    }
+    
+    /* 상하단 여백 최소화 */
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 5rem !important; /* 하단 입력창 여백 */
+        max-width: 720px;
+    }
+
+    /* 문단 간격 최적화 */
+    .stMarkdown p, .stMarkdown li {
+        line-height: 1.4 !important;
+        margin-bottom: 4px !important;
+    }
+
+    /* 퀵 버튼 디자인 */
+    div.stButton > button:first-child {
+        font-size: 11px !important;
+        padding: 5px 10px !important;
+        border-radius: 12px !important;
+        border: 1px solid #4b8bfc;
+        background-color: #f0f2f6;
+        height: auto;
+        width: 100%;
+    }
+    
+    /* 채팅 메시지 박스 최적화 */
+    [data-testid="stChatMessage"] {
+        padding: 0.5rem 0.8rem !important;
+        margin-bottom: 0.4rem !important;
+        border-radius: 10px;
+    }
+
+    /* 답변 내 '질문으로 이동' 버튼 스타일 */
+    .back-to-top {
+        font-size: 11px;
+        color: #4b8bfc;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 8px;
+        border: 1px solid #4b8bfc;
+        padding: 2px 8px;
+        border-radius: 5px;
+    }
+    
+    /* 메뉴 숨기기 */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    
-    /* 전체 배경 및 폰트 설정 */
-    .stApp {
-        background-color: #ffffff;
-    }
-    
-    /* 퀵 질문 버튼 스타일 */
-    div.stButton > button:first-child {
-        background-color: #f0f2f6;
-        color: #0f1116;
-        border: 1px solid #dcdcdc;
-        border-radius: 20px;
-        font-size: 13px;
-        padding: 8px 16px;
-        width: 100%;
-        transition: all 0.3s ease;
-    }
-    div.stButton > button:first-child:hover {
-        background-color: #4b8bfc;
-        color: white;
-        border-color: #4b8bfc;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -44,86 +72,85 @@ st.markdown("""
 # ==========================================
 @st.cache_data
 def load_resume_data():
-    # 실행 파일 기준 절대 경로로 resume.md 참조 (대소문자 주의: resume.md)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, "resume.md")
-    
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
-    else:
-        return "지원자의 이력 데이터를 찾을 수 없습니다. 파일명을 확인해 주세요."
+    return "데이터를 찾을 수 없습니다."
 
 resume_text = load_resume_data()
-
-# Groq API 클라이언트 초기화
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # ==========================================
-# 3. 화면 헤더 및 예상 질문 (퀵버튼)
+# 3. 세션 초기화 및 첫인사
 # ==========================================
-st.title("👨‍💻 IT 인프라·보안 리더 최준영 AI")
-st.write("13년 차 시니어 전문가 최준영의 이력과 역량에 대해 무엇이든 물어보세요.")
-
-# 세션 상태 초기화 (시스템 프롬프트 주입)
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": resume_text},
-        {"role": "assistant", "content": "안녕하세요! 최준영의 AI 비서입니다. 인프라 구축 성과, 정보보안 대응력, 또는 희망 연봉에 대해 궁금하신 점이 있으신가요?"}
+        {"role": "assistant", "content": "안녕하세요! 13년 차 시니어 IT 전문가 최준영의 AI 비서입니다. 무엇을 도와드릴까요?"}
     ]
 
-# 예상 질문 버튼 레이아웃 (3열 배치)
+# ==========================================
+# 4. 화면 헤더 및 퀵 버튼 (예상 질문)
+# ==========================================
+st.title("👨‍💻 최준영 AI 면접 비서")
+
 col1, col2, col3 = st.columns(3)
 quick_question = None
 
-if col1.button("🚀 주요 인프라 성과는?"):
-    quick_question = "가장 자신 있는 주요 인프라 구축 및 망분리 성과에 대해 설명해 줘."
-if col2.button("🛡️ 정보보안 대응 역량은?"):
-    quick_question = "SEMES 정보보안 평가 대응 및 보안 체계 고도화 경험을 알려줘."
-if col3.button("💰 연봉 조건과 채용 근거는?"):
-    quick_question = "희망하는 연봉 수준과 13년 차 시니어로서의 채용 가치를 설명해 줘."
+if col1.button("📄 모든 이력서/포트폴리오 링크"):
+    quick_question = "지원자의 이력서, 자기소개서, 포트폴리오 및 각종 증빙자료 다운로드 링크를 일괄적으로 깔끔하게 정리해 줘."
+if col2.button("🚀 주요 인프라/보안 성과"):
+    quick_question = "10G 네트워크 고도화 및 SEMES 보안평가 대응 등 핵심 성과를 요약해 줘."
+if col3.button("💰 연봉 조건 및 경쟁력"):
+    quick_question = "희망 연봉 수준과 13년 경력의 시니어로서 가지는 독보적인 강점이 뭐야?"
 
 # ==========================================
-# 4. 채팅 UI 및 핵심 로직
+# 5. 채팅 인터페이스 & 로직
 # ==========================================
 
-# 이전 대화 기록 출력
-for msg in st.session_state.messages:
-    if msg["role"] == "user":
-        with st.chat_message("user", avatar="👤"):
-            st.markdown(msg["content"])
-    elif msg["role"] == "assistant":
-        with st.chat_message("assistant", avatar="👨‍💻"):
-            st.markdown(msg["content"])
+# 대화 기록 출력
+for i, msg in enumerate(st.session_state.messages):
+    if msg["role"] == "system": continue
+    
+    with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "👨‍💻"):
+        # 질문 시작 지점에 앵커(ID) 설정
+        if msg["role"] == "user":
+            st.markdown(f'<div id="question-{i}"></div>', unsafe_allow_html=True)
+            
+        st.markdown(msg["content"])
+        
+        # 답변 끝에 '질문으로 돌아가기' 버튼 추가
+        if msg["role"] == "assistant" and i > 0:
+            st.markdown(f'<a href="#question-{i-1}" class="back-to-top">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
 
-# 사용자 입력 처리 (직접 입력 또는 퀵버튼)
-prompt = st.chat_input("질문을 입력해 주세요")
+# 사용자 입력 처리
+prompt = st.chat_input("질문을 입력하세요")
 final_prompt = quick_question if quick_question else prompt
 
 if final_prompt:
-    # 사용자 질문 화면 출력 및 저장
-    with st.chat_message("user", avatar="👤"):
-        st.markdown(final_prompt)
+    # 사용자 질문 출력
     st.session_state.messages.append({"role": "user", "content": final_prompt})
+    st.rerun() # 화면 갱신을 통해 즉시 질문이 보이게 함
 
-    # AI 답변 생성
+# AI 답변 생성 (마지막 메시지가 사용자일 때만 실행)
+if st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant", avatar="👨‍💻"):
-        try:
-            # API 호출
-            response = client.chat.completions.create(
-                model="openai/gpt-oss-20b", 
-                messages=st.session_state.messages,
-                temperature=0.3,
-                max_tokens=1024
-            )
-            
-            # 답변 파싱 및 <think> 태그 제거
-            raw_answer = response.choices[0].message.content
-            clean_answer = re.sub(r'<think>.*?</think>', '', raw_answer, flags=re.DOTALL).strip()
-            
-            # 최종 답변 출력 및 저장
-            st.markdown(clean_answer)
-            st.session_state.messages.append({"role": "assistant", "content": clean_answer})
-            
-        except Exception as e:
-            st.error(f"오류가 발생했습니다: {e}")
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=st.session_state.messages,
+            temperature=0.3
+        )
+        raw_answer = response.choices[0].message.content
+        clean_answer = re.sub(r'<think>.*?</think>', '', raw_answer, flags=re.DOTALL).strip()
+        
+        st.markdown(clean_answer)
+        # 답변 하단에 돌아가기 버튼 (현재 인덱스 기준)
+        q_idx = len(st.session_state.messages) - 1
+        st.markdown(f'<a href="#question-{q_idx}" class="back-to-top">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
+        
+        st.session_state.messages.append({"role": "assistant", "content": clean_answer})
+        
+        # 자동 스크롤 유도 (Streamlit 기본 동작 보완)
+        st.components.v1.html("<script>window.scrollTo(0, document.body.scrollHeight);</script>", height=0)
