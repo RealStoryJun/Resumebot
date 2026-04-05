@@ -71,7 +71,7 @@ st.markdown("""
     
     /* 하단 입력창 고정 및 여백 */
     [data-testid="stChatInput"] {
-        padding-bottom: 80px !important; 
+        padding-bottom: 10px !important; 
     }
 
     #MainMenu {visibility: hidden;}
