@@ -218,4 +218,49 @@ if st.session_state.messages[-1]["role"] == "user":
                 time.sleep(0.01)
                 
             message_placeholder.markdown(full_response.replace("\n", "  \n"), unsafe_allow_html=True)
-            st.session_
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            st.session_state.pending_hardcoded = None 
+            
+        # 📌 케이스 B: 직접 타자 시 (Llama-4-scout-17b 진짜 스트리밍)
+        else:
+            loading_placeholder = st.empty()
+            loading_placeholder.markdown(
+                "<div style='text-align: center; color: #4b8bfc; font-size: 13px; font-weight: 500; padding: 15px; border-radius: 10px; background-color: #f0f8ff; margin-bottom: 10px;'>"
+                "⏳ AI가 데이터를 심층 분석 중입니다...</div>", 
+                unsafe_allow_html=True
+            )
+            try:
+                # 확정된 안정성/속도 최강 모델 적용
+                response = client.chat.completions.create(
+                    model="meta-llama/llama-4-scout-17b-16e-instruct",
+                    messages=st.session_state.messages,
+                    temperature=0.3,
+                    stream=True
+                )
+                
+                full_response = ""
+                first_chunk_received = False
+                
+                for chunk in response:
+                    if not first_chunk_received:
+                        loading_placeholder.empty()
+                        first_chunk_received = True
+                        
+                    token = chunk.choices[0].delta.content or ""
+                    full_response += token
+                    message_placeholder.markdown(full_response.replace("\n", "  \n") + " ▌", unsafe_allow_html=True)
+                
+                message_placeholder.markdown(full_response.replace("\n", "  \n"), unsafe_allow_html=True)
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+            except groq.RateLimitError:
+                loading_placeholder.empty()
+                st.warning("🚦 **서버 요청 제한 안내**\n\n현재 대기열이 많습니다. 잠시 후 다시 시도해 주세요.")
+                st.session_state.messages.pop() 
+                
+            except Exception as e:
+                loading_placeholder.empty()
+                st.error("알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
+                st.session_state.messages.pop()
+        
+        st.markdown(f'<a href="#q-{len(st.session_state.messages)-1}" class="back-link">↑ 질문 위치로 이동</a>', unsafe_allow_html=True)
