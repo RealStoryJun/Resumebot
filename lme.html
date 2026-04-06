@@ -3,180 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>비철금속 시장 현황 - 실시간 조회</title>
-    <!-- Tailwind CSS (디자인) -->
+    <title>비철금속 & 환율 통합 대시보드</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons (아이콘) -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
+        
+        /* 환율 스크롤 애니메이션 */
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-scroll { 
+            display: inline-block; 
+            white-space: nowrap; 
+            animation: scroll 40s linear infinite; 
+        }
+        .animate-scroll:hover { animation-play-state: paused; cursor: default; }
     </style>
 </head>
-<body>
+<body class="selection:bg-indigo-100">
+
+    <!-- 1. 상단 실시간 환율 티커 -->
+    <div class="bg-slate-900 text-white py-2.5 overflow-hidden sticky top-0 z-50 border-b border-slate-800 shadow-lg">
+        <div id="exchangeBar" class="animate-scroll text-[11px] font-bold flex gap-16 px-4">
+            실시간 환율 데이터를 서버에서 불러오는 중입니다...
+        </div>
+    </div>
+
     <div class="max-w-6xl mx-auto p-4 md:p-10">
-        <!-- 헤더 -->
+        <!-- 2. 헤더 섹션 -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
             <div>
                 <div class="flex items-center gap-3 mb-1">
-                    <div class="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-200 text-white">
-                        <i data-lucide="database"></i>
+                    <div class="bg-indigo-600 p-2.5 rounded-2xl shadow-xl shadow-indigo-100 text-white">
+                        <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
                     </div>
-                    <h1 class="text-3xl font-black tracking-tight text-slate-900">비철금속 시장 현황</h1>
+                    <h1 class="text-3xl font-black tracking-tight text-slate-900 uppercase">Market Intelligence</h1>
                 </div>
-                <p class="text-slate-500 font-medium flex items-center gap-2">
-                    <i data-lucide="activity" class="text-green-500 w-4 h-4"></i>
-                    조달청 비축물자 일일가격 데이터 (LME 연동)
+                <p class="text-slate-500 font-medium flex items-center gap-2 text-sm ml-1">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    KEXIM 환율 & LME 금속 실시간 통합 모니터링
                 </p>
             </div>
-            <button onclick="fetchData()" id="refreshBtn" class="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-2xl font-bold transition-all shadow-sm active:scale-95 group">
-                <i data-lucide="refresh-cw" id="refreshIcon" class="group-hover:rotate-180 transition-transform duration-500"></i>
-                데이터 갱신
+            <button onclick="fetchAllData()" id="refreshBtn" class="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-2xl font-bold transition-all shadow-sm active:scale-95 group">
+                <i data-lucide="refresh-cw" id="refreshIcon" class="group-hover:rotate-180 transition-transform duration-700 text-slate-400"></i>
+                새로고침
             </button>
         </header>
 
-        <!-- 상단 카드 -->
+        <!-- 3. 핵심 요약 카드 -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between h-32">
-                <p class="text-slate-400 text-xs font-black uppercase tracking-widest">Monitoring Items</p>
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col justify-between h-40 hover:border-indigo-200 transition-colors">
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Metal Count</p>
                 <div class="flex items-baseline gap-1">
-                    <span id="totalCount" class="text-4xl font-black text-slate-900">-</span>
-                    <span class="text-slate-400 font-bold">개 품목</span>
+                    <span id="totalCount" class="text-5xl font-black text-slate-900 leading-none">-</span>
+                    <span class="text-slate-400 font-bold text-sm uppercase">Items</span>
                 </div>
             </div>
-            <div class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between h-32">
-                <p class="text-slate-400 text-xs font-black uppercase tracking-widest">LME Index Status</p>
+            
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col justify-between h-40 hover:border-indigo-200 transition-colors">
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-3">USD / KRW</p>
                 <div class="flex items-center gap-3">
-                    <span id="lmeIndex" class="text-3xl font-black text-slate-900">-</span>
-                    <div id="lmeTrend" class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-black">
-                        -%
-                    </div>
+                    <span id="usdRate" class="text-4xl font-black text-slate-900 tracking-tighter leading-none">-</span>
+                    <div class="px-2.5 py-1 rounded-lg text-[10px] font-black bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase">Live</div>
                 </div>
             </div>
-            <div class="bg-slate-900 p-7 rounded-[2rem] shadow-2xl shadow-slate-200 text-white flex flex-col justify-between h-32 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
-                <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Last Sync Time</p>
+
+            <div class="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl shadow-slate-300 text-white flex flex-col justify-between h-40 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/20 rounded-full blur-3xl"></div>
+                <p class="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Last Sync</p>
                 <p id="lastUpdate" class="text-2xl font-black tracking-tight">-</p>
-                <div class="mt-2 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Worker Online</span>
+                <div class="mt-2 flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <i data-lucide="check-circle" class="w-3 h-3 text-emerald-400"></i> Cloudflare Worker
                 </div>
             </div>
         </div>
 
-        <!-- 에러 메시지 -->
-        <div id="errorAlert" class="hidden mb-8 flex items-center gap-4 bg-red-50 border-l-4 border-red-500 p-5 rounded-r-2xl shadow-md text-red-700">
-            <i data-lucide="alert-circle"></i>
-            <div>
-                <p class="font-bold">연결 오류</p>
-                <p class="text-sm">Cloudflare Worker 주소나 SERVICE_KEY 설정을 확인하세요.</p>
+        <!-- 4. 상세 데이터 테이블 -->
+        <div class="bg-white rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden">
+            <div class="px-10 py-7 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+                <h2 class="font-black text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-600"></i> Metal Prices (LME)
+                </h2>
+                <span class="text-[10px] bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full font-black tracking-[0.1em]">REAL-TIME FEED</span>
             </div>
-        </div>
-
-        <!-- 테이블 -->
-        <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-            <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                <span class="font-black text-slate-700 text-xs uppercase tracking-widest">Daily Market Data</span>
-                <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">REAL-TIME</span>
-            </div>
+            
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
                         <tr class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-50">
-                            <th class="px-8 py-5">금속 품목</th>
-                            <th class="px-8 py-5 text-right font-mono">종가 (USD)</th>
-                            <th class="px-8 py-5 text-right font-mono">변동폭 (%)</th>
-                            <th class="px-8 py-5 text-right font-mono">LME 지수</th>
+                            <th class="px-10 py-6">금속 품목</th>
+                            <th class="px-10 py-6 text-right">종가 (USD)</th>
+                            <th class="px-10 py-6 text-right">변동폭 (%)</th>
+                            <th class="px-10 py-6 text-right">LME 지수</th>
                         </tr>
                     </thead>
                     <tbody id="dataTable" class="divide-y divide-slate-50 text-sm">
-                        <!-- 데이터가 여기에 삽입됩니다 -->
+                        <!-- 데이터 로딩 전 안내 -->
+                        <tr>
+                            <td colspan="4" class="px-10 py-24 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="animate-spin text-indigo-600"><i data-lucide="loader-2" class="w-8 h-8"></i></div>
+                                    <p class="text-slate-300 font-black uppercase tracking-[0.2em] text-xs">Loading Live Data...</p>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
-            <div id="loadingState" class="py-20 text-center flex flex-col items-center gap-4">
-                <div class="animate-spin text-blue-600"><i data-lucide="loader-2" class="w-8 h-8"></i></div>
-                <p class="text-slate-400 font-bold text-sm">데이터를 가져오고 있습니다...</p>
-            </div>
         </div>
+        
+        <footer class="mt-8 text-center text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em]">
+            Public Procurement Service & KEXIM • Integrated Dashboard
+        </footer>
     </div>
 
     <script>
-        // 실제 배포된 Cloudflare Worker 주소
-        const WORKER_API_URL = 'https://lme.god8night.workers.dev/';
+        // 사용자의 워커 주소
+        const WORKER_URL = 'https://lme.god8night.workers.dev';
 
-        async function fetchData() {
-            const btn = document.getElementById('refreshBtn');
-            const icon = document.getElementById('refreshIcon');
-            const errorAlert = document.getElementById('errorAlert');
-            const tableBody = document.getElementById('dataTable');
-            const loadingState = document.getElementById('loadingState');
-
-            btn.disabled = true;
-            icon.classList.add('animate-spin');
-            errorAlert.classList.add('hidden');
-
+        // 1. 환율 데이터 가져오기
+        async function fetchExchangeData() {
             try {
-                // 워커 호출
-                const response = await fetch(WORKER_API_URL);
-                if (!response.ok) throw new Error();
-                const result = await response.json();
-                const data = result.data;
-
-                if (!data || data.length === 0) throw new Error();
-
-                // 통계 업데이트
-                document.getElementById('totalCount').innerText = result.totalCount || data.length;
-                document.getElementById('lmeIndex').innerText = data[0].런던금속거래소지수 || '-';
+                const response = await fetch(`${WORKER_URL}/api/exchange`);
+                const data = await response.json();
+                const bar = document.getElementById('exchangeBar');
                 
-                const lmeTrendEl = document.getElementById('lmeTrend');
-                const lmeTrendVal = parseFloat(data[0].런던금속거래소지수변동폭);
-                lmeTrendEl.innerText = (lmeTrendVal > 0 ? '+' : '') + (data[0].런던금속거래소지수변동폭 || '0') + '%';
-                lmeTrendEl.className = `flex items-center gap-1 px-2 py-1 rounded-full text-xs font-black ${lmeTrendVal > 0 ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`;
+                // 수출입은행 API 응답에서 RESULT: 1 (성공)인 것만 필터링
+                const validData = Array.isArray(data) ? data.filter(item => item.result === 1) : [];
                 
-                document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString();
-
-                // 테이블 업데이트
-                loadingState.classList.add('hidden');
-                tableBody.innerHTML = '';
-                data.forEach(item => {
-                    const diff = parseFloat(item.변동폭);
-                    const isUp = diff > 0;
-                    const trendColor = isUp ? 'text-red-500' : 'text-blue-500';
-                    const trendBg = isUp ? 'bg-red-50' : 'bg-blue-50';
-
-                    tableBody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition-colors group">
-                            <td class="px-8 py-6">
-                                <div class="flex flex-col">
-                                    <span class="font-black text-slate-800 text-lg group-hover:text-blue-600 transition-colors">${item.물품분류이름}</span>
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase">Code: ${item.물품분류번호}</span>
-                                </div>
-                            </td>
-                            <td class="px-8 py-6 text-right font-mono font-black text-slate-900">$${Number(item.종가).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td class="px-8 py-6 text-right">
-                                <span class="inline-block px-3 py-1 rounded-xl font-black ${trendBg} ${trendColor}">
-                                    ${isUp ? '▲' : '▼'} ${Math.abs(diff)}%
-                                </span>
-                            </td>
-                            <td class="px-8 py-6 text-right font-mono font-bold text-slate-400">${item.런던금속거래소지수}</td>
-                        </tr>
-                    `;
-                });
-            } catch (err) {
-                console.error(err);
-                errorAlert.classList.remove('hidden');
-                loadingState.innerHTML = `<p class="text-red-400 font-bold">데이터를 수신할 수 없습니다.</p>`;
-            } finally {
-                btn.disabled = false;
-                icon.classList.remove('animate-spin');
+                if (validData.length > 0) {
+                    const usd = validData.find(i => i.cur_unit === 'USD');
+                    if (usd) document.getElementById('usdRate').innerText = usd.deal_bas_r;
+                    
+                    bar.innerHTML = validData.map(item => 
+                        `<span>${item.cur_nm}(${item.cur_unit}): <span class="text-emerald-400">${item.deal_bas_r}원</span></span>`
+                    ).join('');
+                } else {
+                    bar.innerText = "환율 정보: 현재 영업 시간 외이거나 제공되는 당일 데이터가 없습니다.";
+                    document.getElementById('usdRate').innerText = "-";
+                }
+            } catch (e) {
+                console.error("FX Load Error:", e);
+                document.getElementById('exchangeBar').innerText = "환율 데이터 서버 연결 실패";
             }
         }
 
-        // 아이콘 초기화 및 최초 실행
-        window.onload = () => {
-            lucide.createIcons();
-            fetchData();
+        // 2. 비철금속 가격 가져오기
+        async function fetchPriceData() {
+            try {
+                // 워커 코드상 /api/prices 또는 / 로 요청
+                const response = await fetch(`${WORKER_URL}/api/prices`);
+                const result = await response.json();
+                const data = result.data;
+                
+                if (data && Array.isArray(data)) {
+                    document.getElementById('totalCount').innerText = result.totalCount || data.length;
+                    document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                    const tableBody = document.getElementById('dataTable');
+                    tableBody.innerHTML = '';
+                    data.forEach(item => {
+                        const diff = parseFloat(item.변동폭);
+                        const isUp = diff > 0;
+                        const trendColor = isUp ? 'text-rose-500' : 'text-blue-500';
+                        const trendBg = isUp ? 'bg-rose-50' : 'bg-blue-50';
+
+                        tableBody.innerHTML += `
+                            <tr class="hover:bg-slate-50 transition-all group duration-300">
+                                <td class="px-10 py-8">
+                                    <div class="flex flex-col">
+                                        <span class="font-black text-slate-800 text-lg group-hover:text-indigo-600 transition-colors tracking-tight">${item.물품분류이름}</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Code: ${item.물품분류번호}</span>
+                                    </div>
+                                </td>
+                                <td class="px-10 py-8 text-right font-mono">
+                                    <span class="font-black text-slate-900 text-xl group-hover:text-indigo-600 transition-colors">$${Number(item.종가).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                                </td>
+                                <td class="px-10 py-8 text-right font-mono">
+                                    <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl font-black text-xs shadow-sm ${trendBg} ${trendColor}">
+                                        ${isUp ? '▲' : '▼'} ${Math.abs(diff)}%
+                                    </span>
+                                </td>
+                                <td class="px-10 py-8 text-right font-mono font-bold text-slate-400 tracking-tight">
+                                    ${item.런던금속거래소지수}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (e) { 
+                console.error("Metal Data Load Error:", e);
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="4" class="px-10 py-20 text-center text-rose-400 font-black uppercase tracking-widest text-xs italic">Data Sync Failed</td></tr>';
+            }
+        }
+
+        // 전체 실행 함수
+        async function fetchAllData() {
+            const btn = document.getElementById('refreshBtn');
+            const icon = document.getElementById('refreshIcon');
+            
+            btn.disabled = true;
+            icon.classList.add('animate-spin');
+            
+            // 두 API 동시에 호출
+            await Promise.allSettled([fetchExchangeData(), fetchPriceData()]);
+            
+            btn.disabled = false;
+            icon.classList.remove('animate-spin');
+        }
+
+        // 페이지 로드 시 시작
+        window.onload = () => { 
+            lucide.createIcons(); 
+            fetchAllData(); 
         };
     </script>
 </body>
