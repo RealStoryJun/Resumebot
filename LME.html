@@ -1,151 +1,59 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>비철금속 시장 현황 - 실시간 조회</title>
-    <!-- Tailwind CSS (디자인) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons (아이콘) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
-    </style>
-</head>
-<body>
-    <div class="max-w-6xl mx-auto p-4 md:p-10">
-        <!-- 헤더 -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-            <div>
-                <div class="flex items-center gap-3 mb-1">
-                    <div class="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-200 text-white">
-                        <i data-lucide="database"></i>
-                    </div>
-                    <h1 class="text-3xl font-black tracking-tight text-slate-900">비철금속 시장 현황</h1>
-                </div>
-                <p class="text-slate-500 font-medium flex items-center gap-2">
-                    <i data-lucide="activity" class="text-green-500 w-4 h-4"></i>
-                    조달청 비축물자 일일가격 데이터 (LME 연동)
-                </p>
-            </div>
-            <button onclick="fetchData()" id="refreshBtn" class="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-2xl font-bold transition-all shadow-sm active:scale-95">
-                <i data-lucide="refresh-cw" id="refreshIcon"></i>
-                데이터 갱신
-            </button>
-        </header>
+/**
+ * 조달청 비철금속 일일가격 조회 전용 Cloudflare Worker
+ */
+export default {
+  async fetch(request, env, ctx) {
+    // 보안 팁: 배포 후에는 "*" 대신 실제 웹사이트 도메인(예: "https://yourdomain.com")으로 바꾸는 것이 좋습니다.
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*", 
+      "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
 
-        <!-- 상단 카드 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100">
-                <p class="text-slate-400 text-xs font-black uppercase tracking-widest mb-3">Monitoring Items</p>
-                <div class="flex items-baseline gap-1">
-                    <span id="totalCount" class="text-4xl font-black text-slate-900">0</span>
-                    <span class="text-slate-400 font-bold">개 품목</span>
-                </div>
-            </div>
-            <div class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100">
-                <p class="text-slate-400 text-xs font-black uppercase tracking-widest mb-3">LME Index Status</p>
-                <div class="flex items-center gap-3">
-                    <span id="lmeIndex" class="text-3xl font-black text-slate-900">0.0</span>
-                    <div id="lmeTrend" class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-black">
-                        0%
-                    </div>
-                </div>
-            </div>
-            <div class="bg-slate-900 p-7 rounded-[2rem] shadow-2xl shadow-slate-200 text-white">
-                <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-3">Last Sync Time</p>
-                <p id="lastUpdate" class="text-2xl font-black tracking-tight">-</p>
-                <div class="mt-4 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Server Connected</span>
-                </div>
-            </div>
-        </div>
+    // 브라우저의 CORS 사전 요청 처리
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-        <!-- 에러 메시지 -->
-        <div id="errorAlert" class="hidden mb-8 flex items-center gap-4 bg-white border-l-4 border-red-500 p-5 rounded-r-2xl shadow-md text-red-700">
-            <i data-lucide="alert-circle"></i>
-            <div>
-                <p class="font-bold">연결 오류</p>
-                <p class="text-sm">서버(node server.js)가 실행 중인지 확인하세요.</p>
-            </div>
-        </div>
+    // API 설정 정보
+    const BASE_URL = 'https://api.odcloud.kr/api';
+    const NAMESPACE = '15151558/v1';
+    const API_ENDPOINT = '/uddi:e377eebd-ce29-4807-a362-90f4a0f5c486';
+    
+    /**
+     * [보안 핵심] Cloudflare 대시보드(Settings > Variables)에서 설정한 
+     * SERVICE_KEY 환경변수를 가져옵니다. 코드가 공개되어도 키는 안전합니다.
+     */
+    const SERVICE_KEY = env.SERVICE_KEY; 
 
-        <!-- 테이블 -->
-        <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-50">
-                            <th class="px-8 py-5">금속 품목</th>
-                            <th class="px-8 py-5 text-right">현재가 (USD)</th>
-                            <th className="px-8 py-5 text-right">변동폭 (%)</th>
-                            <th class="px-8 py-5 text-right">LME 지수</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTable" class="divide-y divide-slate-50 text-sm">
-                        <!-- 데이터가 여기에 삽입됩니다 -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    if (!SERVICE_KEY) {
+      return new Response(JSON.stringify({ 
+        error: "Configuration Error", 
+        message: "Cloudflare 대시보드에서 SERVICE_KEY 환경변수를 설정해주세요." 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
-    <script>
-        async function fetchData() {
-            const btn = document.getElementById('refreshBtn');
-            const icon = document.getElementById('refreshIcon');
-            const errorAlert = document.getElementById('errorAlert');
-            const tableBody = document.getElementById('dataTable');
+    // API 호출 주소 생성 (서비스키는 서버측에서만 사용됨)
+    const targetUrl = `${BASE_URL}/${NAMESPACE}${API_ENDPOINT}?serviceKey=${encodeURIComponent(SERVICE_KEY)}&page=1&perPage=10&returnType=JSON`;
 
-            btn.disabled = true;
-            icon.classList.add('animate-spin');
-            errorAlert.classList.add('hidden');
+    try {
+      const response = await fetch(targetUrl);
+      const data = await response.json();
 
-            try {
-                const response = await fetch('http://localhost:3000/api/prices');
-                if (!response.ok) throw new Error();
-                const result = await response.json();
-                const data = result.data;
-
-                // 통계 업데이트
-                document.getElementById('totalCount').innerText = result.totalCount;
-                document.getElementById('lmeIndex').innerText = data[0].런던금속거래소지수;
-                document.getElementById('lmeTrend').innerText = data[0].런던금속거래소지수변동폭 + '%';
-                document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString();
-
-                // 테이블 업데이트
-                tableBody.innerHTML = '';
-                data.forEach(item => {
-                    const isUp = parseFloat(item.변동폭) > 0;
-                    const trendColor = isUp ? 'text-red-500' : 'text-blue-500';
-                    const trendBg = isUp ? 'bg-red-50' : 'bg-blue-50';
-
-                    tableBody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-8 py-6 font-black text-slate-800">${item.물품분류이름}</td>
-                            <td class="px-8 py-6 text-right font-mono font-black text-blue-600">$${Number(item.종가).toLocaleString()}</td>
-                            <td class="px-8 py-6 text-right">
-                                <span class="inline-block px-3 py-1 rounded-xl font-black ${trendBg} ${trendColor}">${item.변동폭}%</span>
-                            </td>
-                            <td class="px-8 py-6 text-right font-mono font-bold text-slate-500">${item.런던금속거래소지수}</td>
-                        </tr>
-                    `;
-                });
-            } catch (err) {
-                errorAlert.classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                icon.classList.remove('animate-spin');
-            }
-        }
-
-        // 아이콘 초기화 및 최초 실행
-        window.onload = () => {
-            lucide.createIcons();
-            fetchData();
-        };
-    </script>
-</body>
-</html>
+      return new Response(JSON.stringify(data), {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json; charset=UTF-8"
+        },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: "API 호출 실패", message: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  },
+};
