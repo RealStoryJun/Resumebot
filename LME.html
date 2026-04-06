@@ -1,59 +1,238 @@
-/**
- * 조달청 비철금속 일일가격 조회 전용 Cloudflare Worker
- */
-export default {
-  async fetch(request, env, ctx) {
-    // 보안 팁: 배포 후에는 "*" 대신 실제 웹사이트 도메인(예: "https://yourdomain.com")으로 바꾸는 것이 좋습니다.
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*", 
-      "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
+import React, { useState, useEffect } from 'react';
+import { 
+  Database, 
+  RefreshCw, 
+  AlertCircle, 
+  TrendingUp, 
+  TrendingDown, 
+  Table as TableIcon, 
+  Activity, 
+  ArrowUpRight, 
+  ArrowDownRight,
+  Clock
+} from 'lucide-react';
 
-    // 브라우저의 CORS 사전 요청 처리
-    if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
-    }
+const App = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({ total: 0, lastUpdate: '-' });
 
-    // API 설정 정보
-    const BASE_URL = 'https://api.odcloud.kr/api';
-    const NAMESPACE = '15151558/v1';
-    const API_ENDPOINT = '/uddi:e377eebd-ce29-4807-a362-90f4a0f5c486';
-    
-    /**
-     * [보안 핵심] Cloudflare 대시보드(Settings > Variables)에서 설정한 
-     * SERVICE_KEY 환경변수를 가져옵니다. 코드가 공개되어도 키는 안전합니다.
-     */
-    const SERVICE_KEY = env.SERVICE_KEY; 
+  // 사용자가 배포한 실제 Cloudflare Worker 주소
+  const WORKER_URL = 'https://lme.god8night.workers.dev/';
 
-    if (!SERVICE_KEY) {
-      return new Response(JSON.stringify({ 
-        error: "Configuration Error", 
-        message: "Cloudflare 대시보드에서 SERVICE_KEY 환경변수를 설정해주세요." 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // API 호출 주소 생성 (서비스키는 서버측에서만 사용됨)
-    const targetUrl = `${BASE_URL}/${NAMESPACE}${API_ENDPOINT}?serviceKey=${encodeURIComponent(SERVICE_KEY)}&page=1&perPage=10&returnType=JSON`;
-
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(targetUrl);
-      const data = await response.json();
-
-      return new Response(JSON.stringify(data), {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json; charset=UTF-8"
-        },
-      });
-    } catch (error) {
-      return new Response(JSON.stringify({ error: "API 호출 실패", message: error.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Worker에서 데이터 호출
+      const response = await fetch(WORKER_URL);
+      if (!response.ok) throw new Error('데이터를 가져오는데 실패했습니다.');
+      
+      const result = await response.json();
+      
+      if (result.data && Array.isArray(result.data)) {
+        setData(result.data);
+        setStats({
+          total: result.totalCount || result.data.length,
+          lastUpdate: new Date().toLocaleTimeString('ko-KR', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          })
+        });
+      } else {
+        throw new Error('데이터 형식이 올바르지 않습니다.');
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
     }
-  },
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // 가격 변동에 따른 스타일 계산
+  const getTrendStyle = (value) => {
+    const num = parseFloat(value);
+    if (isNaN(num) || num === 0) return { color: 'text-slate-500', bg: 'bg-slate-100', icon: null };
+    return num > 0 
+      ? { color: 'text-rose-500', bg: 'bg-rose-50', icon: <ArrowUpRight size={14} /> }
+      : { color: 'text-blue-500', bg: 'bg-blue-50', icon: <ArrowDownRight size={14} /> };
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 lg:p-12 font-sans text-slate-900">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* 상단 헤더 영역 */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="bg-indigo-600 p-2.5 rounded-2xl shadow-xl shadow-indigo-100">
+                <Database className="text-white" size={24} />
+              </div>
+              <h1 className="text-3xl font-black tracking-tight text-slate-900">Metal Market Hub</h1>
+            </div>
+            <p className="text-slate-500 font-medium flex items-center gap-2">
+              <Activity size={16} className="text-emerald-500" />
+              조달청 비축물자 실시간 일일가격 대시보드
+            </p>
+          </div>
+          
+          <button 
+            onClick={fetchData}
+            disabled={loading}
+            className="group flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-2xl font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw size={18} className={`${loading ? 'animate-spin text-indigo-600' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+            실시간 갱신
+          </button>
+        </header>
+
+        {/* 에러 발생 시 알림 창 */}
+        {error && (
+          <div className="mb-8 flex items-center gap-4 bg-white border-l-4 border-rose-500 p-5 rounded-r-2xl shadow-md animate-in fade-in slide-in-from-top-4">
+            <div className="bg-rose-100 p-2 rounded-full text-rose-600">
+              <AlertCircle size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-800 tracking-tight">API 연결 실패</p>
+              <p className="text-sm text-slate-500">Worker 주소나 CORS 설정을 확인해주세요. ({error})</p>
+            </div>
+          </div>
+        )}
+
+        {/* 대시보드 요약 카드 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden group hover:border-indigo-200 transition-colors">
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">Monitoring Count</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-black text-slate-900 leading-none">{stats.total}</span>
+              <span className="text-slate-400 font-bold text-sm">Items</span>
+            </div>
+            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+              <TableIcon size={80} />
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 group hover:border-indigo-200 transition-colors">
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">LME Index Status</p>
+            <div className="flex items-center gap-4">
+              <span className="text-4xl font-black text-slate-900 tracking-tighter leading-none">
+                {data[0]?.런던금속거래소지수 || '0.0'}
+              </span>
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 text-xs font-black shadow-sm shadow-rose-100">
+                <TrendingUp size={14} />
+                {data[0]?.런던금속거래소지수변동폭 || '0'}%
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Clock size={12} /> Sync Time
+            </p>
+            <p className="text-3xl font-black tracking-tight">{stats.lastUpdate}</p>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">API Endpoint: god8night</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 데이터 테이블 섹션 */}
+        <div className="bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+          <div className="px-10 py-8 border-b border-slate-50 bg-white flex items-center justify-between">
+            <h2 className="font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+              <span className="w-1.5 h-7 bg-indigo-600 rounded-full"></span>
+              Metal Price List
+            </h2>
+            <div className="text-[10px] bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full font-black tracking-widest border border-indigo-100">
+              REAL-TIME FEED
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-slate-400 text-[11px] font-black uppercase tracking-[0.2em] border-b border-slate-50">
+                  <th className="px-10 py-6">품목 이름 / 코드</th>
+                  <th className="px-10 py-6 text-right">금일 종가 (USD)</th>
+                  <th className="px-10 py-6 text-right">일일 변동폭</th>
+                  <th className="px-10 py-6 text-right">LME 거래지수</th>
+                  <th className="px-10 py-6 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {loading ? (
+                  Array(6).fill(0).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan="5" className="px-10 py-8 border-b border-slate-50">
+                        <div className="h-4 bg-slate-100 rounded-full w-full"></div>
+                      </td>
+                    </tr>
+                  ))
+                ) : data.length > 0 ? data.map((item, idx) => {
+                  const trend = getTrendStyle(item.변동폭);
+                  return (
+                    <tr key={idx} className="group hover:bg-indigo-50/30 transition-all duration-300 cursor-default">
+                      <td className="px-10 py-8">
+                        <div className="flex flex-col">
+                          <span className="font-black text-slate-800 text-xl group-hover:text-indigo-600 transition-colors tracking-tight">
+                            {item.물품분류이름}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">
+                            ID: {item.물품분류번호}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-10 py-8 text-right font-mono">
+                        <span className="font-black text-slate-900 text-xl">
+                          ${item.종가 ? Number(item.종가).toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}
+                        </span>
+                      </td>
+                      <td className="px-10 py-8 text-right">
+                        <div className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl font-black font-mono text-sm shadow-sm ${trend.bg} ${trend.color}`}>
+                          {trend.icon}
+                          {item.변동폭}%
+                        </div>
+                      </td>
+                      <td className="px-10 py-8 text-right font-mono font-bold text-slate-500">
+                        {item.런던금속거래소지수}
+                      </td>
+                      <td className="px-10 py-8 text-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-200 mx-auto group-hover:bg-indigo-400 group-hover:scale-125 transition-all"></div>
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr>
+                    <td colSpan="5" className="px-10 py-32 text-center">
+                      <div className="flex flex-col items-center gap-6">
+                        <div className="bg-slate-50 p-8 rounded-full border border-slate-100 shadow-inner">
+                          <Database size={48} className="text-slate-200" />
+                        </div>
+                        <p className="text-slate-400 font-bold text-lg tracking-tight uppercase">No Data Available</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-10 py-6 bg-slate-50/50 border-t border-slate-50 text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] text-center">
+            Integrated Data Feed • Public Procurement Service Korea • LME System
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
+
+export default App;
