@@ -96,42 +96,33 @@ Please report this to https://github.com/markedjs/marked.`,e){let e=`<p>An error
 
 **3. 전사 시스템(ERP) 기획 및 PM**
 - 영림원 ERP 전략 도입 총괄 및 SEMES BOM 관련 자동화 시스템 개발
-- 다우오피스 그룹웨어 연동을 통한 전산 자산 반출입, 라이선스 승인 등 사내 프로세스 전산화 완료`},btn3:{label:`🤖 강점`,q:`AI 활용 역량과 본인만의 독보적인 강점은?`,a:`🤖 **독보적 강점: AI를 활용한 실무 자동화**
+- 다우오피스 그룹웨어 연동을 통한 전산 자산 반출입, 라이선스 승인 등 사내 프로세스 전산화 완료`},btn3:{label:`🤖 강점`,q:`AI 활용 역량과 본인만의 독보적인 강점은?`,a:`🤖 **독보적 강점: 인프라를 기반으로 AI를 지휘하는 '오케스트레이터'**
 
-저는 단순히 기술 트렌드를 '아는' 수준을 넘어, 기술을 **비즈니스 가치로 즉각 전환하는 실행력** 이 가장 큰 무기입니다.
+저는 단순히 코드를 짜는 개발자가 아닙니다. 인프라와 보안의 뼈대를 완벽히 이해하고, 그 위에 최신 AI 기술을 얹어 비즈니스 문제를 즉각적으로 해결하는 **'실행력'**이 가장 큰 무기입니다.
 
-단적인 예로, 현재 질문을 주고받으시는 이 '**AI 면접 비서 시스템**' 역시 제가 직접 설계하고 구축한 결과물입니다.
+* **딥 엔지니어링**: 단순 API 호출이 아닌, llama.cpp 터보퀀트(TurboQuant) 포크 버전을 직접 빌드하고 의존성 오류를 해결해내는 트러블슈팅 역량.
+* **업무 자동화 연결**: VS Code와 MCP(Model Context Protocol) 환경을 셋업하여, AI가 실제 하네스 설계 데이터나 ERP 비즈니스 로직을 스스로 처리하도록 워크플로우를 설계할 수 있습니다.
 
-*   **기술 융합**: Cloudflare Workers 및 LLM API(Groq) 연동
-*   **효율 극대화**: 코딩, 인프라 세팅, 데이터 분류 등 다방면의 실무를 AI와 협업하여 자동화
+인프라, 보안, 디자인, 그리고 AI까지. 특정 솔루션에 얽매이지 않고 기업 상황에 맞는 최적의 융합 기술을 제안합니다.`},btn4:{label:`🛠️ 기술`,q:`현재 주력하고 있는 AI 및 주요 기술 스택을 알려줘.`,a:`🛠️ **핵심 로컬 AI 엔지니어링 및 인프라 기술 스택**
 
-이를 통해 저는 고부가 가치 기획과 보안 아키텍처 설계에 집중하며, '**1인 IT 본부**' 로서 기업의 리소스를 획기적으로 절감합니다.`},btn4:{label:`🛠️ 기술`,q:`현재 주력하고 있는 AI 및 주요 기술 스택을 알려줘.`,a:`🛠️ **핵심 역량 및 현재 진행 중인 로컬 AI 기술 스택**
+기업 내부의 데이터 보안을 유지하면서 AX/DX를 실현하는 **'폐쇄망 로컬 LLM 환경 구축'**에 특화되어 있습니다.
 
-현재 기업 내부 보안을 유지하며 AX/DX를 실현하기 위해 '**로컬 LLM 기반 대용량 문서 분류 자동화**' 를 심도 있게 연구 및 적용하고 있습니다.
+* **AI Model & Opt**: Qwen 3.5급 대형 비전/MoE 모델 구동. 환각(Hallucination) 제어를 위한 TQ3_4S 및 Q6 이상의 고품질 양자화(Quantization) 전략 보유.
+* **AI Workflow**: vLLM 환경 구축 및 MCP 서버 연동, 글로벌 룰(Global Rules) 세팅을 통한 맞춤형 AI 에이전트 구성.
+* **Hardware Sizing**: 대용량 컨텍스트 처리 및 RAG(검색 증강 생성) 구성을 위한 VRAM 32GB~96GB 사이징 설계.
+* **Infra & Security**: L3/L4 Routing, 10G SFP+, VMware, 데이터 3중 백업, 망분리 설계 및 SEMES 컴플라이언스 완벽 대응.`},btn5:{label:`🏆 차별점`,q:`다른 시니어 엔지니어와 차별화되는 점은 무엇인가요?`,a:`💡 **위기를 기회로 역이용하는 과감한 결단력과 실행력**
 
-*   **AI Model & Opt**: Qwen 3.5급 70B 이상 비전 모델 핸들링, 환각 억제를 위한 **최소 Q6 양자화** 전략 보유
+제 가장 큰 차별점은 기술의 거대한 흐름을 읽고, 성장을 위해 기꺼이 모든 것을 던지는 '집요한 실행력'입니다.
 
-*   **Hardware Tuning**: RAG 구성 및 초대용량 컨텍스트 처리를 위한 **최대 96GB 이상 GPU 서버** 아키텍처 설계
+2023년 대(大) AI 시대를 체감하고, 2025년 Claude Code 등의 등장을 보며 단순 활용을 넘어 심층적인 AI 인프라 오케스트레이션 역량이 필수임을 뼈저리게 느꼈습니다. 
 
-*   **Infra Stack**: Cisco L3/L4 Routing, 10G SFP+, VLAN, VMware, NAS 3중 백업 및 서버 이중화
+이에 저는 안정적인 직장을 과감히 퇴사하고 학업에 전면 복귀했습니다. 목적은 단 하나, **대학이 보유한 H100 등 고성능 AI 서버 인프라를 합법적으로 활용해 로컬 LLM 기술을 완벽히 제 것으로 만드는 것**이었습니다. 그리고 이제 논문과 함께 2026년 8월, 이 긴 배움의 여정에 마침표를 찍습니다.
 
-*   **Security Stack**: UTM 방화벽 튜닝, WAF, DLP/EPP, 망분리 설계 및 **SEMES 보안 규정** 완벽 대응`},btn5:{label:`🏆 차별점`,q:`다른 시니어 엔지니어와 차별화되는 점은 무엇인가요?`,a:`💡 **지식과 기획력을 융합하여 AI를 지휘하는 '1인 문제 해결사'**
+이처럼 목표를 위해 수단을 가리지 않고 배우며 끝내 결과를 만들어내는 책임감, 이것이 귀사에 제공할 저의 가장 강력한 무기입니다.`},btn7:{label:`💰 연봉`,q:`희망 연봉이나 급여 조건은 어떻게 되시는지 궁금합니다.`,a:`💰 **희망 연봉: 8,000만 원 이상**
 
-특정 기술에 매몰되지 않고 인프라, 보안, 디자인의 탄탄한 기초 위에서 AI를 도구로 활용해 **비즈니스 문제를 해결** 합니다.
+저의 **13년 3개월간 쌓아온 탄탄한 인프라/보안 실무 노하우**에, 디자인 시각화 역량과 최신 로컬 LLM 오케스트레이션(MCP, vLLM 구축 등) 기술이 결합된 가치는 시장에서 흔치 않은 **'대체 불가능성'**을 지닙니다.
 
-*   **풀스택 주도권**: 기획부터 인프라 설계, 보안 적용, 배포까지 **전체 파이프라인** 을 홀로 주도 가능
-*   **벤더 독립성**: 특정 솔루션에 얽매이지 않고 기업 상황에 맞는 최적의 기술 조합을 제안
-
-**"시작한 일은 올바르게 끝맺어야 한다"**
-
-현업의 바쁜 환경 속에서도 학업을 놓지 않고, 2026년 8월 실무 경험을 집대성한 논문으로 졸업이라는 마침표를 찍으려 합니다. 이 **집요한 책임감** 으로 귀사의 어떤 복잡한 IT 이슈도 반드시 올바르게 끝맺겠습니다.`},btn7:{label:`💰 연봉`,q:`희망 연봉이나 급여 조건은 어떻게 되시는지 궁금합니다.`,a:`💰 **희망 연봉 및 처우 조건**
-
-저의 **13년 3개월의 실무 경력** (인프라 설계, 정보보안, 솔루션 PM 등)과 현재의 AI 자동화 역량을 종합적으로 고려하여 제안해주시는 처우를 긍정적으로 검토하고자 합니다.
-
-*   **협의 원칙**: 귀사의 내규에 따르되, 상호 합리적인 선에서 **유연하게 협의** 가 가능합니다.
-
-*   **가치 제안**: 단순한 '비용'이 아닌, 귀사의 인프라를 혁신하고 보안을 강화할 수 있는 **'투자' 로서의 가치** 를 증명하겠습니다.
-
-구체적인 연봉 및 복리후생은 면접이나 처우 협의 단계에서 상세히 논의드리고 싶습니다.`}},mt=()=>(0,A.jsxs)(`header`,{className:`header`,children:[(0,A.jsxs)(`div`,{className:`header-title`,children:[(0,A.jsx)(`span`,{className:`status-dot`}),(0,A.jsx)(`h1`,{children:`최준영 AI 비서`})]}),(0,A.jsx)(`div`,{className:`badge`,children:`Senior IT Infra`})]}),ht=({message:e})=>{let t=e.role===`assistant`;return(0,A.jsx)(`div`,{className:`msg-row ${e.role}`,children:(0,A.jsxs)(`div`,{className:`msg-inner`,children:[(0,A.jsx)(`div`,{className:`avatar ${e.role}`,children:t?`🤖`:`👤`}),(0,A.jsx)(`div`,{className:`msg-text`,dangerouslySetInnerHTML:{__html:k.parse(e.content)}})]})})},gt=({onAsk:e})=>(0,A.jsx)(`div`,{className:`chip-container`,children:Object.keys(pt).map(t=>{let n=pt[t];return(0,A.jsx)(`button`,{type:`button`,className:`chip ${t===`btn6`?`highlight`:``}`,onClick:()=>e(t),children:n.label||n.q},t)})});function _t(){let[e,t]=(0,l.useState)([{role:`assistant`,content:`반갑습니다. 최준영 지원자의 AI 면접 비서입니다.
+* **가치 제안**: 저는 단순한 시스템 관리자가 아닙니다. 귀사의 복잡한 인프라를 혁신하고, AI를 도입하여 리소스를 획기적으로 절감시킬 **'핵심 투자'**로서 그 이상의 성과를 반드시 증명하겠습니다.
+* **유연한 협의**: 8,000만 원을 기준으로 하되, 귀사의 내규와 복리후생, 향후 비전을 종합적으로 고려하여 긍정적이고 유연하게 협의할 준비가 되어 있습니다.`}},mt=()=>(0,A.jsxs)(`header`,{className:`header`,children:[(0,A.jsxs)(`div`,{className:`header-title`,children:[(0,A.jsx)(`span`,{className:`status-dot`}),(0,A.jsx)(`h1`,{children:`최준영 AI 비서`})]}),(0,A.jsx)(`div`,{className:`badge`,children:`Senior IT Infra`})]}),ht=({message:e})=>{let t=e.role===`assistant`;return(0,A.jsx)(`div`,{className:`msg-row ${e.role}`,children:(0,A.jsxs)(`div`,{className:`msg-inner`,children:[(0,A.jsx)(`div`,{className:`avatar ${e.role}`,children:t?`🤖`:`👤`}),(0,A.jsx)(`div`,{className:`msg-text`,dangerouslySetInnerHTML:{__html:k.parse(e.content)}})]})})},gt=({onAsk:e})=>(0,A.jsx)(`div`,{className:`chip-container`,children:Object.keys(pt).map(t=>{let n=pt[t];return(0,A.jsx)(`button`,{type:`button`,className:`chip ${t===`btn6`?`highlight`:``}`,onClick:()=>e(t),children:n.label||n.q},t)})});function _t(){let[e,t]=(0,l.useState)([{role:`assistant`,content:`반갑습니다. 최준영 지원자의 AI 면접 비서입니다.
 궁금하신 점을 질문해 주시면 13년의 실무 노하우를 바탕으로 답변해 드리겠습니다.`}]),[n,r]=(0,l.useState)(``),[i,a]=(0,l.useState)(!1),[o,s]=(0,l.useState)(!1),c=(0,l.useRef)(null),u=(0,l.useRef)(null);(0,l.useEffect)(()=>{c.current&&(c.current.scrollTop=c.current.scrollHeight)},[e,i]),(0,l.useEffect)(()=>{i||u.current?.focus()},[i]),(0,l.useEffect)(()=>{let e=()=>{c.current&&s(c.current.scrollTop>300)},t=c.current;return t?.addEventListener(`scroll`,e),()=>t?.removeEventListener(`scroll`,e)},[]);let d=()=>{c.current?.scrollTo({top:0,behavior:`smooth`})},f=e=>{let n=pt[e];n&&(t(e=>[...e,{role:`user`,content:n.q}]),setTimeout(()=>{t(e=>[...e,{role:`assistant`,content:n.a}]),u.current?.focus()},500))},p=async e=>{e.preventDefault();let t=n.trim();!t||i||(r(``),await m(t))},m=async n=>{let r=[...e,{role:`user`,content:n}],i={role:`assistant`,content:``};t([...r,i]),a(!0);try{let e=await fetch(ft,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({messages:r})});if(!e.body)throw Error(`Stream not supported`);let n=e.body.getReader(),i=new TextDecoder(`utf-8`),a=``;for(;;){let{done:e,value:r}=await n.read();if(e)break;let o=i.decode(r,{stream:!0}).split(`
 `).filter(e=>e.trim()!==``);for(let e of o)if(e.startsWith(`data: `)){let n=e.slice(6);if(n===`[DONE]`)break;try{let e=JSON.parse(n).choices[0]?.delta?.content||``;e&&(a+=e,t(e=>{let t=[...e];return t[t.length-1].content=a,t}))}catch{}}}}catch{t(e=>{let t=[...e];return t[t.length-1].content=`⚠️ 원활한 통신을 위해 잠시 후 다시 시도해 주세요.`,t})}finally{a(!1),u.current?.focus()}};return(0,A.jsxs)(`div`,{className:`main-wrapper`,children:[(0,A.jsx)(mt,{}),(0,A.jsx)(`div`,{className:`quick-questions-top`,children:(0,A.jsx)(gt,{onAsk:f})}),(0,A.jsx)(`main`,{className:`chat-view`,ref:c,children:(0,A.jsxs)(`div`,{className:`messages-list`,children:[e.map((e,t)=>(0,A.jsx)(ht,{message:e},t)),i&&!e[e.length-1].content&&(0,A.jsx)(`div`,{className:`stream-loading`,children:`AI가 답변을 생성하고 있습니다...`})]})}),o&&(0,A.jsx)(`button`,{className:`scroll-top-btn`,onClick:d,"aria-label":`Move to Top`,children:`↑`}),(0,A.jsx)(`footer`,{className:`bottom-nav`,children:(0,A.jsxs)(`form`,{className:`input-group`,onSubmit:p,children:[(0,A.jsx)(`input`,{type:`text`,ref:u,placeholder:`입력 창에 질문을 입력하세요...`,value:n,onChange:e=>r(e.target.value),disabled:i}),(0,A.jsx)(`button`,{type:`submit`,className:`send-btn`,disabled:i||!n.trim(),children:i?`...`:`➤`})]})})]})}(0,c.createRoot)(document.getElementById(`root`)).render((0,A.jsx)(_t,{}));
