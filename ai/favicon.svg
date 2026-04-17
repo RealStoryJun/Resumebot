@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+      <defs>
+        <!-- 원본 이미지에서 추출한 파란색 -> 보라색 선형 그라데이션 -->
+        <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#1A9AFF" />
+          <stop offset="100%" stop-color="#A244FF" />
+        </linearGradient>
+      </defs>
+
+      <!-- 둥근 말풍선과 오른쪽 아래 꼬리 형태 (Path) -->
+      <path d="M100,40
+               H412
+               A60,60 0 0,1 472,100
+               V340
+               A60,60 0 0,1 412,400
+               H370
+               L370,470
+               A8,8 0 0,1 356,476
+               L270,400
+               H100
+               A60,60 0 0,1 40,340
+               V100
+               A60,60 0 0,1 100,40 Z"
+            fill="url(#aiGradient)" />
+
+      <!-- 'AI' 텍스트 (모든 운영체제에서 깔끔하게 보이도록 기본 폰트 시스템 적용) -->
+      <text x="185" y="275" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="160" fill="#ffffff" text-anchor="middle" letter-spacing="-2">AI</text>
+
+      <!-- 3개의 말줄임표 점 (정확한 원형 그래픽) -->
+      <circle cx="295" cy="235" r="15" fill="#ffffff" />
+      <circle cx="345" cy="235" r="15" fill="#ffffff" />
+      <circle cx="395" cy="235" r="15" fill="#ffffff" />
+    </svg>
