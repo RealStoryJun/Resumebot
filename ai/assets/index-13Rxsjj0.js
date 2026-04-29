@@ -14,7 +14,6 @@ import{n as e}from"./rolldown-runtime-DF2fYuay.js";import{n as t,r as n,t as r}f
 | **문서** | 📊 경력기술서 PDF | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/resume.pdf) | 에이치아이티, 포스코ICT, 삼성SDI 주요 프로젝트 상세 |
 | **문서** | 📝 자기소개서 PDF | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Selfintroduction.pdf) | 2005학번 엔지니어의 서사 + 디자인 융합 철학 |
 | **문서** | 🎨 포트폴리오 PDF | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Portfolio.pdf) | 인프라 구조 + 보안 정책 시각화 결과물 |
-| **데모** | 🧠 Fasttrack (문서분류) | [체험](https://realstoryjun.dothome.co.kr/fasttrack2) | TTS 기반 단일 웹 학습 애플리케이션 |
 
 각 라이브 플랫폼은 **OAuth/RBAC/RLS/AES/Rate Limiting까지 갖춘 프로덕션 아키텍처**입니다. 기술 검증이 필요한 항목은 위 도메인에서 실시간 확인 가능합니다.`},btn2:{label:`🚀 성과`,q:`주요 인프라 구축 및 보안 성과를 상세히 요약해 줘.`,a:`✅ **핵심 실무 성과 요약 (총 경력 13년 3개월)**
 
