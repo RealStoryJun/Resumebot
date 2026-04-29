@@ -2,16 +2,21 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/AdminDashboard-
 import{n as e}from"./rolldown-runtime-DF2fYuay.js";import{n as t,r as n,t as r}from"./react--DbkYnXe.js";import{a as i,i as a,n as o,r as s,t as c}from"./router-KRCrr5YT.js";import{a as l,i as u,l as d,o as f,s as p,t as m}from"./api-oRBXmfS3.js";(function(){let e=document.createElement(`link`).relList;if(e&&e.supports&&e.supports(`modulepreload`))return;for(let e of document.querySelectorAll(`link[rel="modulepreload"]`))n(e);new MutationObserver(e=>{for(let t of e)if(t.type===`childList`)for(let e of t.addedNodes)e.tagName===`LINK`&&e.rel===`modulepreload`&&n(e)}).observe(document,{childList:!0,subtree:!0});function t(e){let t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),e.crossOrigin===`use-credentials`?t.credentials=`include`:e.crossOrigin===`anonymous`?t.credentials=`omit`:t.credentials=`same-origin`,t}function n(e){if(e.ep)return;e.ep=!0;let n=t(e);fetch(e.href,n)}})();var h=e(n(),1),g=t(),_={btn6:{label:`📞 연락처`,q:`최준영 지원자의 연락처와 이메일을 알려줘.`,a:`📞 **연락처:** 010-2828-9832
 📧 **이메일:** god8night@naver.com
 
-단순한 면접 문의뿐만 아니라, 현재 귀사가 겪고 있는 인프라 병목 현상이나 정보보안/AI 도입 관련 기술적 고민이 있으시다면 언제든 편하게 연락 주십시오. 13년 3개월의 실무 노하우를 바탕으로 명쾌한 답변을 드리겠습니다.`},btn1:{label:`📄 증빙`,q:`이력서, 포트폴리오 및 증빙자료 링크를 정리해 줘.`,a:`지원자 최준영의 13년 경력과 융합적 역량을 증빙하는 핵심 자료입니다.
+단순한 면접 문의뿐만 아니라, 현재 귀사가 겪고 있는 인프라 병목 현상이나 정보보안/AI 도입 관련 기술적 고민이 있으시다면 언제든 편하게 연락 주십시오. 13년 3개월의 실무 노하우를 바탕으로 명쾌한 답변을 드리겠습니다.`},btn1:{label:`📄 증빙`,q:`이력서, 포트폴리오 및 증빙자료 링크를 정리해 줘.`,a:`지원자 최준영의 13년 경력 + 비개발자 신분으로 직접 운영 중인 **AI/DX 풀스택 플랫폼 4건**을 함께 검증할 수 있는 증빙 자료입니다.
 
-| 분류 | 문서/프로젝트 | 링크 및 바로가기 | 설명 |
+| 분류 | 문서/프로젝트 | 링크 | 설명 |
 |---|---|---|---|
-| **웹** | 📄 웹 이력서 (Main) | [바로가기](https://realstoryjun.dothome.co.kr/resume) | Vibe Coding을 활용하여 직접 호스팅 및 세팅한 통합 이력서 |
-| **문서** | 📊 경력기술서 (PDF) | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/resume.pdf) | 에이치아이티, 포스코ICT, 삼성SDI 등 주요 프로젝트 상세 내역 |
-| **문서** | 📝 자기소개서 (PDF) | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Selfintroduction.pdf) | 2005학번 엔지니어의 서사와 **디자인을 아는 IT 전문가**의 철학 |
-| **문서** | 🎨 포트폴리오 (PDF) | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Portfolio.pdf) | 인프라 구조 및 보안 정책 시각화(Talk Converter) 결과물 |
-| **웹앱** | 🚀 바리가자 | [서비스 체험 🚀](https://www.barigaja.co.kr/) | AI 프롬프팅과 기획력을 바탕으로 1인 구축한 웹 서비스 |
-| **웹앱** | 🧠 Fasttrack | [서비스 체험 🔍](https://realstoryjun.dothome.co.kr/fasttrack2) | TTS 기능을 탑재한 단일 웹 기반 영어 학습 애플리케이션 |`},btn2:{label:`🚀 성과`,q:`주요 인프라 구축 및 보안 성과를 상세히 요약해 줘.`,a:`✅ **핵심 실무 성과 요약 (총 경력 13년 3개월)**
+| **🚀 라이브** | 금속업 SaaS ERP (B-mode) | [erp.realstoryjun.co.kr](https://erp.realstoryjun.co.kr) | Next.js 15 + Supabase, 26테이블/40마이그/5단계 RBAC 550룰 |
+| **🚀 라이브** | 폴스타4 매뉴얼 AI Q&A | [psaimanual.realstoryjun.co.kr](https://psaimanual.realstoryjun.co.kr) | RAG(BGE+재정렬+HyDE) + Cloudflare D1 23테이블 |
+| **🚀 라이브** | 바리가자 (라이딩 PWA) | [barigaja.co.kr](https://barigaja.co.kr) | Supabase Realtime + Edge Function 7개 + FCM V1 |
+| **🚀 라이브** | AI 면접 비서 (이 시스템) | [realstoryjun.co.kr/ai](https://realstoryjun.co.kr/ai) | Cloudflare Workers + Groq Llama-4 + 60일 자동 GC |
+| **웹** | 웹 이력서 (Main) | [바로가기](https://realstoryjun.dothome.co.kr/resume) | 직접 호스팅·세팅한 통합 이력서 |
+| **문서** | 📊 경력기술서 PDF | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/resume.pdf) | 에이치아이티, 포스코ICT, 삼성SDI 주요 프로젝트 상세 |
+| **문서** | 📝 자기소개서 PDF | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Selfintroduction.pdf) | 2005학번 엔지니어의 서사 + 디자인 융합 철학 |
+| **문서** | 🎨 포트폴리오 PDF | [다운로드](https://realstoryjun.dothome.co.kr/uploads/resume/Portfolio.pdf) | 인프라 구조 + 보안 정책 시각화 결과물 |
+| **데모** | 🧠 Fasttrack (문서분류) | [체험](https://realstoryjun.dothome.co.kr/fasttrack2) | TTS 기반 단일 웹 학습 애플리케이션 |
+
+각 라이브 플랫폼은 **OAuth/RBAC/RLS/AES/Rate Limiting까지 갖춘 프로덕션 아키텍처**입니다. 기술 검증이 필요한 항목은 위 도메인에서 실시간 확인 가능합니다.`},btn2:{label:`🚀 성과`,q:`주요 인프라 구축 및 보안 성과를 상세히 요약해 줘.`,a:`✅ **핵심 실무 성과 요약 (총 경력 13년 3개월)**
 
 **1. 대규모 네트워크 및 시스템 고도화**
 - 노후망(Cat.5/6) 직접 포설부터 100M → 1G → **10G 광랜(SFP+)** 으로의 전 구간 대역폭 고도화 완료
