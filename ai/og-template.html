@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>OG Thumbnail</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+<style>
+  :root {
+    --primary: #007AFF;
+    --primary-soft: #4DA2FF;
+    --accent: #34C759;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1200px; height: 630px;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0A0E1A;
+    color: #fff;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.02em;
+  }
+  .stage {
+    position: relative;
+    width: 1200px; height: 630px;
+    background:
+      radial-gradient(circle at 80% 20%, rgba(0,122,255,0.45) 0%, transparent 45%),
+      radial-gradient(circle at 15% 80%, rgba(124,77,255,0.35) 0%, transparent 50%),
+      linear-gradient(135deg, #0A0E1A 0%, #1B1F3A 60%, #0A0E1A 100%);
+    overflow: hidden;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(circle at 60% 50%, black 30%, transparent 75%);
+  }
+  .glow {
+    position: absolute;
+    width: 420px; height: 420px;
+    right: -80px; top: -80px;
+    background: radial-gradient(circle, rgba(0,122,255,0.55) 0%, transparent 70%);
+    filter: blur(40px);
+  }
+
+  .content {
+    position: relative; z-index: 2;
+    width: 100%; height: 100%;
+    padding: 70px 80px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+
+  /* 상단 브랜드 */
+  .brand-row {
+    display: flex; align-items: center; gap: 20px;
+  }
+  .bot-avatar {
+    width: 76px; height: 76px;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.16);
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px;
+    box-shadow: 0 8px 30px rgba(0,122,255,0.25), inset 0 0 30px rgba(255,255,255,0.05);
+  }
+  .brand-text h1 {
+    font-size: 38px; font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  .brand-text .subtitle {
+    margin-top: 6px;
+    font-size: 17px; font-weight: 500;
+    color: #A8B0C7;
+    letter-spacing: -0.01em;
+  }
+
+  /* 메인 카피 */
+  .headline {
+    font-size: 62px; font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5C2E0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .headline .accent {
+    background: linear-gradient(120deg, #4DA2FF 0%, #7C4DFF 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* KPI chips */
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    max-width: 980px;
+  }
+  .chip {
+    padding: 12px 22px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    font-size: 19px; font-weight: 600;
+    color: #E2E8F8;
+    backdrop-filter: blur(8px);
+    letter-spacing: -0.01em;
+  }
+  .chip .dot {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    margin-right: 10px;
+    vertical-align: middle;
+    box-shadow: 0 0 8px rgba(52,199,89,0.6);
+  }
+  .chip.primary {
+    background: rgba(0,122,255,0.18);
+    border-color: rgba(0,122,255,0.45);
+    color: #fff;
+  }
+
+  /* 하단 도메인 + 워터마크 */
+  .footer {
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .domain {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 22px; font-weight: 600;
+    color: #4DA2FF;
+    letter-spacing: 0;
+  }
+  .domain::before {
+    content: '➤  ';
+    color: rgba(255,255,255,0.5);
+  }
+  .badge {
+    padding: 8px 16px;
+    background: rgba(52,199,89,0.15);
+    border: 1px solid rgba(52,199,89,0.4);
+    border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    color: #34C759;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="grid"></div>
+  <div class="glow"></div>
+  <div class="content">
+
+    <div class="brand-row">
+      <div class="bot-avatar">🤖</div>
+      <div class="brand-text">
+        <h1>최준영 AI 면접 비서</h1>
+        <div class="subtitle">스마트팩토리 DX · 정보보안 · AI 인프라 13년차</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="headline">
+        13년차 IT 책임자가<br/>
+        <span class="accent">직접 만든 RAG 챗봇</span>
+      </div>
+    </div>
+
+    <div class="chips">
+      <div class="chip primary"><span class="dot"></span>SEMES 보안평가 82.78점</div>
+      <div class="chip"><span class="dot"></span>영림원 ERP 도입 PM</div>
+      <div class="chip"><span class="dot"></span>AI 플랫폼 4건 라이브 운영</div>
+      <div class="chip"><span class="dot"></span>vLLM · MCP · Groq · Cloudflare</div>
+    </div>
+
+    <div class="footer">
+      <div class="domain">realstoryjun.co.kr/ai</div>
+      <div class="badge">LIVE · Groq Llama-4</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
